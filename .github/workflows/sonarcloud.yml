@@ -22,19 +22,18 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22" # Fixed: Project requires >=22.12.0
+          node-version: "22"
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
         working-directory: openclaw-core
 
-      # Tactical Fix: Ensure the build scripts from the root are accessible in the subfolder
-      - name: Link root scripts
+      # Tactical Fix: Force-copy the scripts to ensure they exist and are executable
+      - name: Sync build scripts
         run: |
-          if [ -d "../scripts" ] && [ ! -d "scripts" ]; then
-            ln -s ../scripts scripts
-          fi
-        working-directory: openclaw-core
+          mkdir -p openclaw-core/scripts
+          cp -r scripts/* openclaw-core/scripts/
+          chmod +x openclaw-core/scripts/*.sh
 
       - name: Build
         run: pnpm build
