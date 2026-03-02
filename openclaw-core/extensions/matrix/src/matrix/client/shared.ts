@@ -62,7 +62,7 @@ async function ensureSharedClientStarted(params: {
   }
   const key = params.state.key;
   const existingStartPromise = sharedClientStartPromises.get(key);
-  if (existingStartPromise) {
+  if (existingStartPromise !== undefined) {
     await existingStartPromise;
     return;
   }
@@ -127,7 +127,7 @@ export async function resolveSharedMatrixClient(
 
   // Check if there's a pending creation for this key
   const existingPromise = sharedClientPromises.get(key);
-  if (existingPromise) {
+  if (existingPromise !== undefined) {
     const pending = await existingPromise;
     if (shouldStart) {
       await ensureSharedClientStarted({

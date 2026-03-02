@@ -22,7 +22,7 @@ function checkFormattedBodyMention(formattedBody: string | undefined, userId: st
     return false;
   }
   // Escape special regex characters in the user ID (e.g., @user:matrix.org)
-  const escapedUserId = userId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const escapedUserId = userId.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&");
   // Match matrix.to links with the user ID, handling both URL-encoded and plain formats
   // Example: href="https://matrix.to/#/@user:matrix.org" or href="https://matrix.to/#/%40user%3Amatrix.org"
   const plainPattern = new RegExp(`href=["']https://matrix\\.to/#/${escapedUserId}["']`, "i");

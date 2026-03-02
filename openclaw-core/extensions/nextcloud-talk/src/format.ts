@@ -17,7 +17,7 @@ export function markdownToNextcloudTalk(text: string): string {
  * Escape special characters in text to prevent markdown interpretation.
  */
 export function escapeNextcloudTalkMarkdown(text: string): string {
-  return text.replace(/([*_`~[\]()#>+\-=|{}!\\])/g, "\\$1");
+  return text.replaceAll(/([*_`~[\]()#>+\-=|{}!\\])/g, "\\$1");
 }
 
 /**
@@ -54,11 +54,11 @@ export function stripNextcloudTalkFormatting(text: string): string {
   return text
     .replaceAll(/```[\s\S]*?```/g, "")
     .replaceAll(/`[^`]+`/g, "")
-    .replace(/\*\*([^*]+)\*\*/g, "$1")
-    .replace(/\*([^*]+)\*/g, "$1")
-    .replace(/_([^_]+)_/g, "$1")
-    .replace(/~~([^~]+)~~/g, "$1")
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replaceAll(/\*\*([^*]+)\*\*/g, "$1")
+    .replaceAll(/\*([^*]+)\*/g, "$1")
+    .replaceAll(/_([^_]+)_/g, "$1")
+    .replaceAll(/~~([^~]+)~~/g, "$1")
+    .replaceAll(/\[([^\]]+)\]\([^)]+\)/g, "$1")
     .replaceAll(/\s+/g, " ")
     .trim();
 }

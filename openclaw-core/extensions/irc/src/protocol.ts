@@ -109,12 +109,12 @@ function decodeLiteralEscapes(input: string): string {
   // Defensive: this is not a full JS string unescaper.
   // It's just enough to catch common "\r\n" / "\u0001" style payloads.
   return input
-    .replaceAll(/\\r/g, "\r")
-    .replaceAll(/\\n/g, "\n")
-    .replaceAll(/\\t/g, "\t")
-    .replaceAll(/\\0/g, "\0")
-    .replaceAll(/\\x([0-9a-fA-F]{2})/g, (_, hex) => String.fromCharCode(Number.parseInt(hex, 16)))
-    .replaceAll(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(Number.parseInt(hex, 16)));
+    .replaceAll("\\r", "\r")
+    .replaceAll("\\n", "\n")
+    .replaceAll("\\t", "\t")
+    .replaceAll("\\0", "\0")
+    .replaceAll(/\\x([0-9a-fA-F]{2})/g, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)))
+    .replaceAll(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)));
 }
 
 export function sanitizeIrcOutboundText(text: string): string {

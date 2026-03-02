@@ -147,7 +147,7 @@ async function importCoreExtensionAPI(): Promise<{
 }
 
 export async function loadCoreAgentDeps(): Promise<CoreAgentDeps> {
-  if (coreDepsPromise) {
+  if (coreDepsPromise !== null) {
     return coreDepsPromise;
   }
 

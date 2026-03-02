@@ -371,7 +371,7 @@ export const bluebubblesMessageActions: ChannelMessageActionAdapter = {
       }
 
       // Decode base64 to buffer
-      const buffer = Uint8Array.from(atob(base64Buffer), (c) => c.charCodeAt(0));
+      const buffer = Uint8Array.from(atob(base64Buffer), (c) => c.codePointAt(0) ?? 0);
 
       await setGroupIconBlueBubbles(resolvedChatGuid, buffer, filename, {
         ...opts,
@@ -435,7 +435,7 @@ export const bluebubblesMessageActions: ChannelMessageActionAdapter = {
       let buffer: Uint8Array;
       if (base64Buffer) {
         // Decode base64 to buffer
-        buffer = Uint8Array.from(atob(base64Buffer), (c) => c.charCodeAt(0));
+        buffer = Uint8Array.from(atob(base64Buffer), (c) => c.codePointAt(0) ?? 0);
       } else if (filePath) {
         // Read file from path (will be handled by caller providing buffer)
         throw new Error(

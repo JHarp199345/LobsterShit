@@ -220,7 +220,7 @@ export function looksLikeBlueBubblesTargetId(raw: string, normalized?: string): 
   if (candidate.includes("@")) {
     return true;
   }
-  const digitsOnly = candidate.replace(/[\s().-]/g, "");
+  const digitsOnly = candidate.replaceAll(/[\s().-]/g, "");
   if (/^\+?\d{3,}$/.test(digitsOnly)) {
     return true;
   }

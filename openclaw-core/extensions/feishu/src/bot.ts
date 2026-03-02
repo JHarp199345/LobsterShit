@@ -216,8 +216,8 @@ export function stripBotMention(
   if (!mentions || mentions.length === 0) return text;
   let result = text;
   for (const mention of mentions) {
-    result = result.replace(new RegExp(`@${escapeRegExp(mention.name)}\\s*`, "g"), "");
-    result = result.replace(new RegExp(escapeRegExp(mention.key), "g"), "");
+    result = result.replaceAll(new RegExp(`@${escapeRegExp(mention.name)}\\s*`, "g"), "");
+    result = result.replaceAll(new RegExp(escapeRegExp(mention.key), "g"), "");
   }
   return result.trim();
 }

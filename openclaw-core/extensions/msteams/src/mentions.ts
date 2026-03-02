@@ -58,7 +58,7 @@ export function parseMentions(text: string): {
   const entities: MentionEntity[] = [];
 
   // Replace @[Name](id) with <at>Name</at> only for valid Teams IDs
-  const formattedText = text.replace(mentionPattern, (match, name, id) => {
+  const formattedText = text.replaceAll(mentionPattern, (match, name, id) => {
     const trimmedId = id.trim();
 
     // Skip matches where the id doesn't look like a real Teams identifier
@@ -110,7 +110,7 @@ export function formatMentionText(text: string, mentions: MentionInfo[]): string
     // Replace @Name or @name with <at>Name</at>
     const escapedName = escapeForRegex(mention.name);
     const namePattern = new RegExp(`@${escapedName}`, "gi");
-    formatted = formatted.replace(namePattern, `<at>${mention.name}</at>`);
+    formatted = formatted.replaceAll(namePattern, `<at>${mention.name}</at>`);
   }
   return formatted;
 }

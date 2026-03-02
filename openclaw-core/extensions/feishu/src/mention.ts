@@ -71,7 +71,7 @@ export function extractMessageBody(text: string, allMentionKeys: string[]): stri
 
   // Remove all @ placeholders
   for (const key of allMentionKeys) {
-    result = result.replace(new RegExp(escapeRegExp(key), "g"), "");
+    result = result.replaceAll(new RegExp(escapeRegExp(key), "g"), "");
   }
 
   return result.replaceAll(/\s+/g, " ").trim();
