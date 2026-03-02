@@ -70,5 +70,5 @@ async function save() {
   await checkRelayReachable(port, token)
 }
 
-document.getElementById('save').addEventListener('click', () => void save())
-void load()
+document.getElementById('save').addEventListener('click', () => save().catch(() => {}))
+load().catch(() => {})

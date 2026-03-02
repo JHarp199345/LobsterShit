@@ -193,7 +193,7 @@ function isLoopbackRemoteAddress(remoteAddress: string | undefined): boolean {
     return false;
   }
 
-  const ipLower = remoteAddress.toLowerCase().replace(/^\[|\]$/g, "");
+  const ipLower = remoteAddress.toLowerCase().replaceAll(/^\[|\]$/g, "");
 
   // IPv6 loopback
   if (ipLower === "::1") {
@@ -331,23 +331,37 @@ async function handleGetProfile(
 // PUT /api/channels/nostr/:accountId/profile
 // ============================================================================
 
+function validateProfileUrls(profile: NostrProfile): string | null {
+  if (profile.picture) {
+    const check = validateUrlSafety(profile.picture);
+    if (!check.ok) return `picture: ${check.error}`;
+  }
+  if (profile.banner) {
+    const check = validateUrlSafety(profile.banner);
+    if (!check.ok) return `banner: ${check.error}`;
+  }
+  if (profile.website) {
+    const check = validateUrlSafety(profile.website);
+    if (!check.ok) return `website: ${check.error}`;
+  }
+  return null;
+}
+
 async function handleUpdateProfile(
   accountId: string,
   ctx: NostrProfileHttpContext,
   req: IncomingMessage,
   res: ServerResponse,
-): Promise<true> {
+): Promise<boolean> {
   if (!enforceLoopbackMutationGuards(ctx, req, res)) {
     return true;
   }
 
-  // Rate limiting
   if (!checkRateLimit(accountId)) {
     sendJson(res, 429, { ok: false, error: "Rate limit exceeded (5 requests/minute)" });
     return true;
   }
 
-  // Parse body
   let body: unknown;
   try {
     body = await readJsonBody(req);
@@ -356,7 +370,6 @@ async function handleUpdateProfile(
     return true;
   }
 
-  // Validate profile
   const parseResult = ProfileUpdateSchema.safeParse(body);
   if (!parseResult.success) {
     const errors = parseResult.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
@@ -365,48 +378,20 @@ async function handleUpdateProfile(
   }
 
   const profile = parseResult.data;
-
-  // SSRF check for picture URL
-  if (profile.picture) {
-    const pictureCheck = validateUrlSafety(profile.picture);
-    if (!pictureCheck.ok) {
-      sendJson(res, 400, { ok: false, error: `picture: ${pictureCheck.error}` });
-      return true;
-    }
+  const urlError = validateProfileUrls(profile);
+  if (urlError) {
+    sendJson(res, 400, { ok: false, error: urlError });
+    return true;
   }
 
-  // SSRF check for banner URL
-  if (profile.banner) {
-    const bannerCheck = validateUrlSafety(profile.banner);
-    if (!bannerCheck.ok) {
-      sendJson(res, 400, { ok: false, error: `banner: ${bannerCheck.error}` });
-      return true;
-    }
-  }
-
-  // SSRF check for website URL
-  if (profile.website) {
-    const websiteCheck = validateUrlSafety(profile.website);
-    if (!websiteCheck.ok) {
-      sendJson(res, 400, { ok: false, error: `website: ${websiteCheck.error}` });
-      return true;
-    }
-  }
-
-  // Merge with existing profile to preserve unknown fields
   const existingProfile = ctx.getConfigProfile(accountId) ?? {};
-  const mergedProfile: NostrProfile = {
-    ...existingProfile,
-    ...profile,
-  };
+  const mergedProfile: NostrProfile = { ...existingProfile, ...profile };
 
-  // Publish with mutex to prevent concurrent publishes
   try {
     const result = await withPublishLock(accountId, async () => {
       return await publishNostrProfile(accountId, mergedProfile);
     });
 
-    // Only persist if at least one relay succeeded
     if (result.successes.length > 0) {
       await ctx.updateConfigProfile(accountId, mergedProfile);
       ctx.log?.info(`[${accountId}] Profile published to ${result.successes.length} relay(s)`);

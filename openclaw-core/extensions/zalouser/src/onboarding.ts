@@ -1,3 +1,4 @@
+import { validateRequired } from "../../shared/validation.js";
 import type {
   ChannelOnboardingAdapter,
   ChannelOnboardingDmPolicy,
@@ -149,7 +150,7 @@ async function promptZalouserAllowFrom(params: {
       message: "Zalouser allowFrom (username or user id)",
       placeholder: "Alice, 123456789",
       initialValue: existingAllowFrom[0] ? String(existingAllowFrom[0]) : undefined,
-      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+      validate: validateRequired,
     });
     const parts = parseInput(String(entry));
     const results = await Promise.all(parts.map((part) => resolveUserId(part)));

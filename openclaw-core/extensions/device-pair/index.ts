@@ -59,14 +59,17 @@ function parseNormalizedGatewayUrl(raw: string): string | null {
   try {
     const parsed = new URL(raw);
     const scheme = parsed.protocol.slice(0, -1);
-    const normalizedScheme = scheme === "http" ? "ws" : scheme === "https" ? "wss" : scheme;
+    let normalizedScheme = scheme;
+    if (scheme === "http") normalizedScheme = "ws";
+    else if (scheme === "https") normalizedScheme = "wss";
     if (!(normalizedScheme === "ws" || normalizedScheme === "wss")) {
       return null;
     }
     if (!parsed.hostname) {
       return null;
     }
-    return `${normalizedScheme}://${parsed.hostname}${parsed.port ? `:${parsed.port}` : ""}`;
+    const portPart = parsed.port ? ":" + String(parsed.port) : "";
+    return `${normalizedScheme}://${parsed.hostname}${portPart}`;
   } catch {
     return null;
   }
@@ -104,37 +107,24 @@ function resolveScheme(
   return cfg.gateway?.tls?.enabled === true ? "wss" : "ws";
 }
 
-function isPrivateIPv4(address: string): boolean {
+function parseIPv4Octets(address: string): [number, number, number, number] | null {
   const parts = address.split(".");
-  if (parts.length != 4) {
-    return false;
-  }
+  if (parts.length !== 4) return null;
   const octets = parts.map((part) => Number.parseInt(part, 10));
-  if (octets.some((value) => !Number.isFinite(value) || value < 0 || value > 255)) {
-    return false;
-  }
+  if (octets.some((v) => !Number.isFinite(v) || v < 0 || v > 255)) return null;
+  return octets as [number, number, number, number];
+}
+
+function isPrivateIPv4(address: string): boolean {
+  const octets = parseIPv4Octets(address);
+  if (!octets) return false;
   const [a, b] = octets;
-  if (a === 10) {
-    return true;
-  }
-  if (a === 172 && b >= 16 && b <= 31) {
-    return true;
-  }
-  if (a === 192 && b === 168) {
-    return true;
-  }
-  return false;
+  return a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168);
 }
 
 function isTailnetIPv4(address: string): boolean {
-  const parts = address.split(".");
-  if (parts.length !== 4) {
-    return false;
-  }
-  const octets = parts.map((part) => Number.parseInt(part, 10));
-  if (octets.some((value) => !Number.isFinite(value) || value < 0 || value > 255)) {
-    return false;
-  }
+  const octets = parseIPv4Octets(address);
+  if (!octets) return false;
   const [a, b] = octets;
   return a === 100 && b >= 64 && b <= 127;
 }
@@ -284,7 +274,7 @@ async function resolveGatewayUrl(api: OpenClawPluginApi): Promise<ResolveUrlResu
 function encodeSetupCode(payload: SetupPayload): string {
   const json = JSON.stringify(payload);
   const base64 = Buffer.from(json, "utf8").toString("base64");
-  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  return base64.replaceAll("+", "-").replaceAll("/", "_").replaceAll(/=+$/g, "");
 }
 
 function formatSetupReply(payload: SetupPayload, authLabel: string): string {
@@ -495,23 +485,23 @@ export default function register(api: OpenClawPluginApi) {
             }`,
           );
           const send = api.runtime?.channel?.telegram?.sendMessageTelegram;
-          if (!send) {
-            throw new Error(
-              `telegram runtime unavailable (runtime keys: ${runtimeKeys.join(",")}; channel keys: ${channelKeys.join(
-                ",",
-              )})`,
+          if (send) {
+            await send(target, formatSetupInstructions(), {
+              ...(ctx.messageThreadId != null ? { messageThreadId: ctx.messageThreadId } : {}),
+              ...(ctx.accountId ? { accountId: ctx.accountId } : {}),
+            });
+            api.logger.info?.(
+              `device-pair: telegram split send ok target=${target} account=${ctx.accountId ?? "none"} thread=${
+                ctx.messageThreadId ?? "none"
+              }`,
             );
+            return { text: encodeSetupCode(payload) };
           }
-          await send(target, formatSetupInstructions(), {
-            ...(ctx.messageThreadId != null ? { messageThreadId: ctx.messageThreadId } : {}),
-            ...(ctx.accountId ? { accountId: ctx.accountId } : {}),
-          });
-          api.logger.info?.(
-            `device-pair: telegram split send ok target=${target} account=${ctx.accountId ?? "none"} thread=${
-              ctx.messageThreadId ?? "none"
-            }`,
+          throw new Error(
+            `telegram runtime unavailable (runtime keys: ${runtimeKeys.join(",")}; channel keys: ${channelKeys.join(
+              ",",
+            )})`,
           );
-          return { text: encodeSetupCode(payload) };
         } catch (err) {
           api.logger.warn?.(
             `device-pair: telegram split send failed, falling back to single message (${String(

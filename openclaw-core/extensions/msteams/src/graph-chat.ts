@@ -33,8 +33,8 @@ export function buildTeamsFileInfoCard(file: DriveItemProperties): {
   const rawETag = file.eTag;
   const uniqueId =
     rawETag
-      .replace(/^["']|["']$/g, "") // Remove outer quotes
-      .replace(/[{}]/g, "") // Remove curly braces
+      .replaceAll(/^["']|["']$/g, "") // Remove outer quotes
+      .replaceAll(/[{}]/g, "") // Remove curly braces
       .split(",")[0] ?? rawETag; // Take the GUID part before comma
 
   // Extract file extension from filename

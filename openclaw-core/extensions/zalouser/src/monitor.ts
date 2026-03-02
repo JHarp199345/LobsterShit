@@ -5,6 +5,7 @@ import type {
   OutboundReplyPayload,
   RuntimeEnv,
 } from "openclaw/plugin-sdk";
+import { sanitizeForIdentifier } from "../../shared/identifiers.js";
 import {
   createScopedPairingAccess,
   createReplyPrefixOptions,
@@ -74,14 +75,11 @@ function isSenderAllowed(senderId: string, allowFrom: string[]): boolean {
 }
 
 function normalizeGroupSlug(raw?: string | null): string {
-  const trimmed = raw?.trim().toLowerCase() ?? "";
-  if (!trimmed) {
-    return "";
-  }
-  return trimmed
-    .replace(/^#/, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+  return sanitizeForIdentifier(raw, {
+    replaceChar: "-",
+    alphanumericOnly: true,
+    default: "",
+  });
 }
 
 function isGroupAllowed(params: {

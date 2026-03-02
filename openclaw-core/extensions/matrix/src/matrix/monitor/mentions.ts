@@ -1,3 +1,4 @@
+import { escapeForRegex } from "../../../../shared/regex.js";
 import { getMatrixRuntime } from "../../runtime.js";
 
 // Type for room message content with mentions
@@ -29,7 +30,7 @@ function checkFormattedBodyMention(formattedBody: string | undefined, userId: st
     return true;
   }
   // Also check URL-encoded version (@ -> %40, : -> %3A)
-  const encodedUserId = encodeURIComponent(userId).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const encodedUserId = escapeForRegex(encodeURIComponent(userId));
   const encodedPattern = new RegExp(`href=["']https://matrix\\.to/#/${encodedUserId}["']`, "i");
   return encodedPattern.test(formattedBody);
 }

@@ -40,6 +40,8 @@ vi.mock("./probe.js", () => ({
   getCachedBlueBubblesPrivateApiStatus: vi.fn().mockReturnValue(null),
 }));
 
+import { MOCK_PASSWORD } from "./test-fixtures.js";
+
 describe("bluebubblesMessageActions", () => {
   const listActions = bluebubblesMessageActions.listActions!;
   const supportsAction = bluebubblesMessageActions.supportsAction!;
@@ -51,7 +53,7 @@ describe("bluebubblesMessageActions", () => {
     channels: {
       bluebubbles: {
         serverUrl: "http://localhost:1234",
-        password: "test-password",
+        password: MOCK_PASSWORD,
       },
     },
   });
@@ -92,7 +94,7 @@ describe("bluebubblesMessageActions", () => {
           bluebubbles: {
             enabled: true,
             serverUrl: "http://localhost:1234",
-            password: "test-password",
+            password: MOCK_PASSWORD,
           },
         },
       };
@@ -106,7 +108,7 @@ describe("bluebubblesMessageActions", () => {
           bluebubbles: {
             enabled: true,
             serverUrl: "http://localhost:1234",
-            password: "test-password",
+            password: MOCK_PASSWORD,
             actions: { reactions: false },
           },
         },
@@ -125,7 +127,7 @@ describe("bluebubblesMessageActions", () => {
           bluebubbles: {
             enabled: true,
             serverUrl: "http://localhost:1234",
-            password: "test-password",
+            password: MOCK_PASSWORD,
           },
         },
       };
@@ -204,7 +206,7 @@ describe("bluebubblesMessageActions", () => {
         channels: {
           bluebubbles: {
             serverUrl: "http://localhost:1234",
-            password: "test-password",
+            password: MOCK_PASSWORD,
           },
         },
       };
@@ -223,7 +225,7 @@ describe("bluebubblesMessageActions", () => {
         channels: {
           bluebubbles: {
             serverUrl: "http://localhost:1234",
-            password: "test-password",
+            password: MOCK_PASSWORD,
           },
         },
       };
@@ -243,7 +245,7 @@ describe("bluebubblesMessageActions", () => {
         channels: {
           bluebubbles: {
             serverUrl: "http://localhost:1234",
-            password: "test-password",
+            password: MOCK_PASSWORD,
           },
         },
       };
@@ -262,7 +264,7 @@ describe("bluebubblesMessageActions", () => {
         channels: {
           bluebubbles: {
             serverUrl: "http://localhost:1234",
-            password: "test-password",
+            password: MOCK_PASSWORD,
           },
         },
       };
@@ -284,7 +286,7 @@ describe("bluebubblesMessageActions", () => {
         channels: {
           bluebubbles: {
             serverUrl: "http://localhost:1234",
-            password: "test-password",
+            password: MOCK_PASSWORD,
           },
         },
       };
@@ -350,7 +352,7 @@ describe("bluebubblesMessageActions", () => {
         channels: {
           bluebubbles: {
             serverUrl: "http://localhost:1234",
-            password: "test-password",
+            password: MOCK_PASSWORD,
           },
         },
       };
@@ -380,7 +382,7 @@ describe("bluebubblesMessageActions", () => {
         channels: {
           bluebubbles: {
             serverUrl: "http://localhost:1234",
-            password: "test-password",
+            password: MOCK_PASSWORD,
           },
         },
       };
@@ -412,7 +414,7 @@ describe("bluebubblesMessageActions", () => {
         channels: {
           bluebubbles: {
             serverUrl: "http://localhost:1234",
-            password: "test-password",
+            password: MOCK_PASSWORD,
           },
         },
       };
@@ -450,7 +452,7 @@ describe("bluebubblesMessageActions", () => {
         channels: {
           bluebubbles: {
             serverUrl: "http://localhost:1234",
-            password: "test-password",
+            password: MOCK_PASSWORD,
           },
         },
       };
@@ -484,7 +486,7 @@ describe("bluebubblesMessageActions", () => {
         channels: {
           bluebubbles: {
             serverUrl: "http://localhost:1234",
-            password: "test-password",
+            password: MOCK_PASSWORD,
           },
         },
       };
@@ -510,7 +512,7 @@ describe("bluebubblesMessageActions", () => {
         channels: {
           bluebubbles: {
             serverUrl: "http://localhost:1234",
-            password: "test-password",
+            password: MOCK_PASSWORD,
           },
         },
       };
@@ -536,7 +538,7 @@ describe("bluebubblesMessageActions", () => {
         channels: {
           bluebubbles: {
             serverUrl: "http://localhost:1234",
-            password: "test-password",
+            password: MOCK_PASSWORD,
           },
         },
       };
@@ -569,7 +571,7 @@ describe("bluebubblesMessageActions", () => {
         channels: {
           bluebubbles: {
             serverUrl: "http://localhost:1234",
-            password: "test-password",
+            password: MOCK_PASSWORD,
           },
         },
       };
@@ -603,7 +605,7 @@ describe("bluebubblesMessageActions", () => {
         channels: {
           bluebubbles: {
             serverUrl: "http://localhost:1234",
-            password: "test-password",
+            password: MOCK_PASSWORD,
           },
         },
       };
@@ -625,7 +627,7 @@ describe("bluebubblesMessageActions", () => {
         channels: {
           bluebubbles: {
             serverUrl: "http://localhost:1234",
-            password: "test-password",
+            password: MOCK_PASSWORD,
           },
         },
       };
@@ -664,7 +666,7 @@ describe("bluebubblesMessageActions", () => {
         channels: {
           bluebubbles: {
             serverUrl: "http://localhost:1234",
-            password: "test-password",
+            password: MOCK_PASSWORD,
           },
         },
       };

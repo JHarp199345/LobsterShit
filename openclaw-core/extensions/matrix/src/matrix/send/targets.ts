@@ -41,7 +41,7 @@ async function persistDirectRoom(
   } catch {
     // Ignore fetch errors and fall back to an empty map.
   }
-  const existing = directContent && !Array.isArray(directContent) ? directContent : {};
+  const existing = Array.isArray(directContent) ? {} : directContent ?? {};
   const current = Array.isArray(existing[userId]) ? existing[userId] : [];
   if (current[0] === roomId) {
     return;

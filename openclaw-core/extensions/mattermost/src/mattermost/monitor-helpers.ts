@@ -3,6 +3,7 @@ import {
   resolveThreadSessionKeys as resolveThreadSessionKeysShared,
   type OpenClawConfig,
 } from "openclaw/plugin-sdk";
+import { sanitizeForIdentifier } from "../../../shared/identifiers.js";
 export { createDedupeCache, rawDataToString } from "openclaw/plugin-sdk";
 
 export type ResponsePrefixContext = {
@@ -22,21 +23,12 @@ export function extractShortModelName(fullModel: string): string {
 export const formatInboundFromLabel = formatInboundFromLabelShared;
 
 function normalizeAgentId(value: string | undefined | null): string {
-  const trimmed = (value ?? "").trim();
-  if (!trimmed) {
-    return "main";
-  }
-  if (/^[a-z0-9][a-z0-9_-]{0,63}$/i.test(trimmed)) {
-    return trimmed;
-  }
-  return (
-    trimmed
-      .toLowerCase()
-      .replace(/[^a-z0-9_-]+/g, "-")
-      .replace(/^-+/, "")
-      .replace(/-+$/, "")
-      .slice(0, 64) || "main"
-  );
+  return sanitizeForIdentifier(value, {
+    replaceChar: "-",
+    maxLen: 64,
+    default: "main",
+    allowDots: false,
+  });
 }
 
 type AgentEntry = NonNullable<NonNullable<OpenClawConfig["agents"]>["list"]>[number];

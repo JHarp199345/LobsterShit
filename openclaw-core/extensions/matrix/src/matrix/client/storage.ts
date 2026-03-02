@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { sanitizeForIdentifier } from "../../../shared/identifiers.js";
 import { getMatrixRuntime } from "../../runtime.js";
 import type { MatrixStoragePaths } from "./types.js";
 
@@ -9,12 +10,7 @@ export const DEFAULT_ACCOUNT_KEY = "default";
 const STORAGE_META_FILENAME = "storage-meta.json";
 
 function sanitizePathSegment(value: string): string {
-  const cleaned = value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9._-]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-  return cleaned || "unknown";
+  return sanitizeForIdentifier(value, { replaceChar: "_", default: "unknown" });
 }
 
 function resolveHomeserverKey(homeserver: string): string {

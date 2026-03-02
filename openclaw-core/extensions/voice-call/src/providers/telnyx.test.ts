@@ -16,7 +16,7 @@ function createCtx(params?: Partial<WebhookContext>): WebhookContext {
 }
 
 function decodeBase64Url(input: string): Buffer {
-  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
+  const normalized = input.replaceAll("-", "+").replaceAll("_", "/");
   const padLen = (4 - (normalized.length % 4)) % 4;
   const padded = normalized + "=".repeat(padLen);
   return Buffer.from(padded, "base64");

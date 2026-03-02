@@ -1,3 +1,4 @@
+import { truncateTo } from "../../shared/preview-text.js";
 import { runZca } from "./zca.js";
 
 export type ZalouserSendOptions = {
@@ -19,7 +20,7 @@ function resolveProfile(options: ZalouserSendOptions): string {
 
 function appendCaptionAndGroupFlags(args: string[], options: ZalouserSendOptions): void {
   if (options.caption) {
-    args.push("-m", options.caption.slice(0, 2000));
+    args.push("-m", truncateTo(options.caption, 2000));
   }
   if (options.isGroup) {
     args.push("-g");
@@ -62,7 +63,7 @@ export async function sendMessageZalouser(
   }
 
   // Send text message
-  const args = ["msg", "send", threadId.trim(), text.slice(0, 2000)];
+  const args = ["msg", "send", threadId.trim(), truncateTo(text, 2000)];
   if (options.isGroup) {
     args.push("-g");
   }

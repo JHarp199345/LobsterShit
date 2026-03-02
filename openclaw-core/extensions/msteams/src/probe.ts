@@ -21,7 +21,7 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
   }
   const payload = parts[1] ?? "";
   const padded = payload.padEnd(payload.length + ((4 - (payload.length % 4)) % 4), "=");
-  const normalized = padded.replace(/-/g, "+").replace(/_/g, "/");
+  const normalized = padded.replaceAll("-", "+").replaceAll("_", "/");
   try {
     const decoded = Buffer.from(normalized, "base64").toString("utf8");
     const parsed = JSON.parse(decoded) as Record<string, unknown>;

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { sendBlueBubblesReaction } from "./reactions.js";
+import { MOCK_PASSWORD } from "./test-fixtures.js";
 
 vi.mock("./accounts.js", async () => {
   const { createBlueBubblesAccountsMockModule } = await import("./test-harness.js");
@@ -32,7 +33,7 @@ describe("reactions", () => {
         remove: true,
         opts: {
           serverUrl: "http://localhost:1234",
-          password: "test",
+          password: MOCK_PASSWORD,
         },
       });
 
@@ -48,7 +49,7 @@ describe("reactions", () => {
           emoji: "love",
           opts: {
             serverUrl: "http://localhost:1234",
-            password: "test",
+            password: MOCK_PASSWORD,
           },
         }),
       ).rejects.toThrow("chatGuid");
@@ -62,7 +63,7 @@ describe("reactions", () => {
           emoji: "love",
           opts: {
             serverUrl: "http://localhost:1234",
-            password: "test",
+            password: MOCK_PASSWORD,
           },
         }),
       ).rejects.toThrow("messageGuid");
@@ -76,7 +77,7 @@ describe("reactions", () => {
           emoji: "",
           opts: {
             serverUrl: "http://localhost:1234",
-            password: "test",
+            password: MOCK_PASSWORD,
           },
         }),
       ).rejects.toThrow("emoji or name");
@@ -114,7 +115,7 @@ describe("reactions", () => {
           emoji: "unsupported",
           opts: {
             serverUrl: "http://localhost:1234",
-            password: "test",
+            password: MOCK_PASSWORD,
           },
         }),
       ).rejects.toThrow("Unsupported BlueBubbles reaction");
@@ -167,7 +168,7 @@ describe("reactions", () => {
             emoji: input,
             opts: {
               serverUrl: "http://localhost:1234",
-              password: "test",
+              password: MOCK_PASSWORD,
             },
           });
 
@@ -189,7 +190,7 @@ describe("reactions", () => {
         emoji: "love",
         opts: {
           serverUrl: "http://localhost:1234",
-          password: "test-password",
+          password: MOCK_PASSWORD,
         },
       });
 
@@ -209,6 +210,7 @@ describe("reactions", () => {
     });
 
     it("includes password in URL query", async () => {
+      const urlTestPass = MOCK_PASSWORD;
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(""),
@@ -220,12 +222,12 @@ describe("reactions", () => {
         emoji: "like",
         opts: {
           serverUrl: "http://localhost:1234",
-          password: "my-react-password",
+          password: urlTestPass,
         },
       });
 
       const calledUrl = mockFetch.mock.calls[0][0] as string;
-      expect(calledUrl).toContain("password=my-react-password");
+      expect(calledUrl).toContain(`password=${urlTestPass}`);
     });
 
     it("sends reaction removal with dash prefix", async () => {
@@ -249,7 +251,7 @@ describe("reactions", () => {
         partIndex: 3,
         opts: {
           serverUrl: "http://localhost:1234",
-          password: "test",
+          password: MOCK_PASSWORD,
         },
       });
 
@@ -271,13 +273,14 @@ describe("reactions", () => {
           emoji: "like",
           opts: {
             serverUrl: "http://localhost:1234",
-            password: "test",
+            password: MOCK_PASSWORD,
           },
         }),
       ).rejects.toThrow("reaction failed (400): Invalid reaction type");
     });
 
     it("resolves credentials from config", async () => {
+      const urlTestPass = MOCK_PASSWORD;
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(""),
@@ -292,7 +295,7 @@ describe("reactions", () => {
             channels: {
               bluebubbles: {
                 serverUrl: "http://react-server:7777",
-                password: "react-pass",
+                password: urlTestPass,
               },
             },
           },
@@ -301,7 +304,7 @@ describe("reactions", () => {
 
       const calledUrl = mockFetch.mock.calls[0][0] as string;
       expect(calledUrl).toContain("react-server:7777");
-      expect(calledUrl).toContain("password=react-pass");
+      expect(calledUrl).toContain(`password=${urlTestPass}`);
     });
 
     it("trims chatGuid and messageGuid", async () => {
@@ -316,7 +319,7 @@ describe("reactions", () => {
         emoji: "question",
         opts: {
           serverUrl: "http://localhost:1234",
-          password: "test",
+          password: MOCK_PASSWORD,
         },
       });
 
@@ -339,7 +342,7 @@ describe("reactions", () => {
           remove: true,
           opts: {
             serverUrl: "http://localhost:1234",
-            password: "test",
+            password: MOCK_PASSWORD,
           },
         });
 
@@ -360,7 +363,7 @@ describe("reactions", () => {
           remove: true,
           opts: {
             serverUrl: "http://localhost:1234",
-            password: "test",
+            password: MOCK_PASSWORD,
           },
         });
 

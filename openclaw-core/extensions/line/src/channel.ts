@@ -1,3 +1,4 @@
+import { truncateTo } from "../../shared/preview-text.js";
 import {
   buildChannelConfigSchema,
   buildTokenChannelStatusSummary,
@@ -390,7 +391,14 @@ export const linePlugin: ChannelPlugin<ResolvedLineAccount> = {
       const chunks = processed.text
         ? runtime.channel.text.chunkMarkdownText(processed.text, chunkLimit)
         : [];
-      const mediaUrls = payload.mediaUrls ?? (payload.mediaUrl ? [payload.mediaUrl] : []);
+      let mediaUrls: string[];
+      if (payload.mediaUrls?.length) {
+        mediaUrls = payload.mediaUrls;
+      } else if (payload.mediaUrl) {
+        mediaUrls = [payload.mediaUrl];
+      } else {
+        mediaUrls = [];
+      }
       const shouldSendQuickRepliesInline = chunks.length === 0 && hasQuickReplies;
 
       if (!shouldSendQuickRepliesInline) {
@@ -461,7 +469,7 @@ export const linePlugin: ChannelPlugin<ResolvedLineAccount> = {
         if (lineData.flexMessage) {
           quickReplyMessages.push({
             type: "flex",
-            altText: lineData.flexMessage.altText.slice(0, 400),
+            altText: truncateTo(lineData.flexMessage.altText, 400),
             contents: lineData.flexMessage.contents,
           });
         }
@@ -474,8 +482,8 @@ export const linePlugin: ChannelPlugin<ResolvedLineAccount> = {
         if (lineData.location) {
           quickReplyMessages.push({
             type: "location",
-            title: lineData.location.title.slice(0, 100),
-            address: lineData.location.address.slice(0, 100),
+            title: truncateTo(lineData.location.title, 100),
+            address: truncateTo(lineData.location.address, 100),
             latitude: lineData.location.latitude,
             longitude: lineData.location.longitude,
           });
@@ -483,7 +491,7 @@ export const linePlugin: ChannelPlugin<ResolvedLineAccount> = {
         for (const flexMsg of processed.flexMessages) {
           quickReplyMessages.push({
             type: "flex",
-            altText: flexMsg.altText.slice(0, 400),
+            altText: truncateTo(flexMsg.altText, 400),
             contents: flexMsg.contents,
           });
         }

@@ -143,7 +143,7 @@ function resolveLobsterScriptFromCmdShim(wrapperPath: string): string | null {
 
       const normalizedRelative = relative
         .trim()
-        .replace(/[\\/]+/g, path.sep)
+        .replaceAll(/[\\/]+/g, path.sep)
         .replace(/^[\\/]+/, "");
       const candidate = path.resolve(path.dirname(wrapperPath), normalizedRelative);
       if (isFilePath(candidate)) {

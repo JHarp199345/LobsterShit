@@ -1,3 +1,4 @@
+import { validateRequired } from "../../shared/validation.js";
 import type {
   ChannelOnboardingAdapter,
   ChannelOnboardingDmPolicy,
@@ -15,7 +16,7 @@ const channel = "feishu" as const;
 function setFeishuDmPolicy(cfg: ClawdbotConfig, dmPolicy: DmPolicy): ClawdbotConfig {
   const allowFrom =
     dmPolicy === "open"
-      ? addWildcardAllowFrom(cfg.channels?.feishu?.allowFrom)?.map((entry) => String(entry))
+      ? addWildcardAllowFrom(cfg.channels?.feishu?.allowFrom)?.map(String)
       : undefined;
   return {
     ...cfg,
@@ -71,7 +72,7 @@ async function promptFeishuAllowFrom(params: {
       message: "Feishu allowFrom (user open_ids)",
       placeholder: "ou_xxxxx, ou_yyyyy",
       initialValue: existing[0] ? String(existing[0]) : undefined,
-      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+      validate: validateRequired,
     });
     const parts = parseAllowFromInput(String(entry));
     if (parts.length === 0) {
@@ -111,13 +112,13 @@ async function promptFeishuCredentials(prompter: WizardPrompter): Promise<{
   const appId = String(
     await prompter.text({
       message: "Enter Feishu App ID",
-      validate: (value) => (value?.trim() ? undefined : "Required"),
+      validate: validateRequired,
     }),
   ).trim();
   const appSecret = String(
     await prompter.text({
       message: "Enter Feishu App Secret",
-      validate: (value) => (value?.trim() ? undefined : "Required"),
+      validate: validateRequired,
     }),
   ).trim();
   return { appId, appSecret };

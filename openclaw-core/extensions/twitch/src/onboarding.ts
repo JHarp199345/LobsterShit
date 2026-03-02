@@ -2,6 +2,7 @@
  * Twitch onboarding adapter for CLI setup wizard.
  */
 
+import { validateRequired } from "../../shared/validation.js";
 import type { OpenClawConfig } from "openclaw/plugin-sdk";
 import {
   formatDocsLink,
@@ -128,7 +129,7 @@ async function promptUsername(
     await prompter.text({
       message: "Twitch bot username",
       initialValue: account?.username ?? "",
-      validate: (value) => (value?.trim() ? undefined : "Required"),
+      validate: validateRequired,
     }),
   ).trim();
 }
@@ -144,7 +145,7 @@ async function promptClientId(
     await prompter.text({
       message: "Twitch Client ID",
       initialValue: account?.clientId ?? "",
-      validate: (value) => (value?.trim() ? undefined : "Required"),
+      validate: validateRequired,
     }),
   ).trim();
 }
@@ -160,7 +161,7 @@ async function promptChannelName(
     await prompter.text({
       message: "Channel to join",
       initialValue: account?.channel ?? "",
-      validate: (value) => (value?.trim() ? undefined : "Required"),
+      validate: validateRequired,
     }),
   ).trim();
   return channelName;
@@ -187,7 +188,7 @@ async function promptRefreshTokenSetup(
       await prompter.text({
         message: "Twitch Client Secret (for token refresh)",
         initialValue: account?.clientSecret ?? "",
-        validate: (value) => (value?.trim() ? undefined : "Required"),
+        validate: validateRequired,
       }),
     ).trim() || undefined;
 
@@ -196,7 +197,7 @@ async function promptRefreshTokenSetup(
       await prompter.text({
         message: "Twitch Refresh Token",
         initialValue: account?.refreshToken ?? "",
-        validate: (value) => (value?.trim() ? undefined : "Required"),
+        validate: validateRequired,
       }),
     ).trim() || undefined;
 

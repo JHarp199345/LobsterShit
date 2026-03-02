@@ -1,5 +1,15 @@
 #!/usr/bin/env node
 
+import * as Sentry from "@sentry/node";
+const dsn = process.env.SENTRY_DSN;
+if (dsn) {
+  Sentry.init({
+    dsn,
+    environment: process.env.NODE_ENV || "development",
+    tracesSampleRate: 0.1,
+  });
+}
+
 import module from "node:module";
 
 // https://nodejs.org/api/module.html#module-compile-cache

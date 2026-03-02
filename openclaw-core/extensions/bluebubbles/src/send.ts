@@ -64,11 +64,11 @@ function resolveEffectId(raw?: string): string | undefined {
   if (EFFECT_MAP[trimmed]) {
     return EFFECT_MAP[trimmed];
   }
-  const normalized = trimmed.replace(/[\s_]+/g, "-");
+  const normalized = trimmed.replaceAll(/[\s_]+/g, "-");
   if (EFFECT_MAP[normalized]) {
     return EFFECT_MAP[normalized];
   }
-  const compact = trimmed.replace(/[\s_-]+/g, "");
+  const compact = trimmed.replaceAll(/[\s_-]+/g, "");
   if (EFFECT_MAP[compact]) {
     return EFFECT_MAP[compact];
   }

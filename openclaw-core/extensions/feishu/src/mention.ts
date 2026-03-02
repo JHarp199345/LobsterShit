@@ -1,11 +1,8 @@
 import type { FeishuMessageEvent } from "./bot.js";
+import { escapeForRegex } from "../../shared/regex.js";
 
-/**
- * Escape regex metacharacters so user-controlled mention fields are treated literally.
- */
-export function escapeRegExp(input: string): string {
-  return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
+/** @deprecated Use escapeForRegex from shared/regex.js */
+export const escapeRegExp = escapeForRegex;
 
 /**
  * Mention target user info
@@ -77,7 +74,7 @@ export function extractMessageBody(text: string, allMentionKeys: string[]): stri
     result = result.replace(new RegExp(escapeRegExp(key), "g"), "");
   }
 
-  return result.replace(/\s+/g, " ").trim();
+  return result.replaceAll(/\s+/g, " ").trim();
 }
 
 /**

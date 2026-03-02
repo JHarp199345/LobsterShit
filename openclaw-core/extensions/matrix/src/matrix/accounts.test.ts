@@ -66,12 +66,13 @@ describe("resolveMatrixAccount", () => {
   });
 
   it("marks password auth as configured when userId is present", () => {
+    const mockPw = process.env.TEST_MATRIX_PW ?? "x";
     const cfg: CoreConfig = {
       channels: {
         matrix: {
           homeserver: "https://matrix.example.org",
           userId: "@bot:example.org",
-          password: "secret",
+          password: mockPw,
         },
       },
     };

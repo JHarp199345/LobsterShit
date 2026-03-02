@@ -1,6 +1,7 @@
 import { EventEmitter } from "node:events";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { OpenClawConfig, PluginRuntime } from "openclaw/plugin-sdk";
+import { MOCK_PASSWORD, MOCK_PASSWORD_B } from "./test-fixtures.js";
 import { removeAckReactionAfterReply, shouldAckReaction } from "openclaw/plugin-sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ResolvedBlueBubblesAccount } from "./accounts.js";
@@ -299,7 +300,7 @@ function createMockAccount(
     configured: true,
     config: {
       serverUrl: "http://localhost:1234",
-      password: "test-password",
+      password: MOCK_PASSWORD,
       dmPolicy: "open",
       groupPolicy: "open",
       allowFrom: [],
@@ -326,7 +327,7 @@ function createMockRequest(
     headers["x-bluebubbles-guid"] !== undefined ||
     headers.authorization !== undefined;
   if (!hasAuthQuery && !hasAuthHeader) {
-    parsedUrl.searchParams.set("password", "test-password");
+    parsedUrl.searchParams.set("password", MOCK_PASSWORD);
   }
 
   const req = new EventEmitter() as IncomingMessage;
@@ -559,13 +560,14 @@ describe("BlueBubbles webhook monitor", () => {
     });
 
     it("authenticates via password query parameter", async () => {
-      const account = createMockAccount({ password: "secret-token" });
+      const urlTestPass = MOCK_PASSWORD;
+      const account = createMockAccount({ password: urlTestPass });
       const config: OpenClawConfig = {};
       const core = createMockRuntime();
       setBlueBubblesRuntime(core);
 
       // Mock non-localhost request
-      const req = createMockRequest("POST", "/bluebubbles-webhook?password=secret-token", {
+      const req = createMockRequest("POST", `/bluebubbles-webhook?password=${encodeURIComponent(urlTestPass)}`, {
         type: "new-message",
         data: {
           text: "hello",
@@ -595,7 +597,8 @@ describe("BlueBubbles webhook monitor", () => {
     });
 
     it("authenticates via x-password header", async () => {
-      const account = createMockAccount({ password: "secret-token" });
+      const urlTestPass = MOCK_PASSWORD;
+      const account = createMockAccount({ password: urlTestPass });
       const config: OpenClawConfig = {};
       const core = createMockRuntime();
       setBlueBubblesRuntime(core);
@@ -613,7 +616,7 @@ describe("BlueBubbles webhook monitor", () => {
             guid: "msg-1",
           },
         },
-        { "x-password": "secret-token" },
+        { "x-password": urlTestPass },
       );
       (req as unknown as { socket: { remoteAddress: string } }).socket = {
         remoteAddress: "192.168.1.100",
@@ -635,12 +638,14 @@ describe("BlueBubbles webhook monitor", () => {
     });
 
     it("rejects unauthorized requests with wrong password", async () => {
-      const account = createMockAccount({ password: "secret-token" });
+      const urlTestPass = MOCK_PASSWORD;
+      const wrongPassword = `${urlTestPass}-wrong`;
+      const account = createMockAccount({ password: urlTestPass });
       const config: OpenClawConfig = {};
       const core = createMockRuntime();
       setBlueBubblesRuntime(core);
 
-      const req = createMockRequest("POST", "/bluebubbles-webhook?password=wrong-token", {
+      const req = createMockRequest("POST", `/bluebubbles-webhook?password=${encodeURIComponent(wrongPassword)}`, {
         type: "new-message",
         data: {
           text: "hello",
@@ -670,8 +675,9 @@ describe("BlueBubbles webhook monitor", () => {
     });
 
     it("rejects ambiguous routing when multiple targets match the same password", async () => {
-      const accountA = createMockAccount({ password: "secret-token" });
-      const accountB = createMockAccount({ password: "secret-token" });
+      const urlTestPass = MOCK_PASSWORD;
+      const accountA = createMockAccount({ password: urlTestPass });
+      const accountB = createMockAccount({ password: urlTestPass });
       const config: OpenClawConfig = {};
       const core = createMockRuntime();
       setBlueBubblesRuntime(core);
@@ -679,7 +685,7 @@ describe("BlueBubbles webhook monitor", () => {
       const sinkA = vi.fn();
       const sinkB = vi.fn();
 
-      const req = createMockRequest("POST", "/bluebubbles-webhook?password=secret-token", {
+      const req = createMockRequest("POST", `/bluebubbles-webhook?password=${encodeURIComponent(urlTestPass)}`, {
         type: "new-message",
         data: {
           text: "hello",
@@ -724,7 +730,8 @@ describe("BlueBubbles webhook monitor", () => {
     });
 
     it("ignores targets without passwords when a password-authenticated target matches", async () => {
-      const accountStrict = createMockAccount({ password: "secret-token" });
+      const urlTestPass = MOCK_PASSWORD;
+      const accountStrict = createMockAccount({ password: urlTestPass });
       const accountWithoutPassword = createMockAccount({ password: undefined });
       const config: OpenClawConfig = {};
       const core = createMockRuntime();
@@ -733,7 +740,7 @@ describe("BlueBubbles webhook monitor", () => {
       const sinkStrict = vi.fn();
       const sinkWithoutPassword = vi.fn();
 
-      const req = createMockRequest("POST", "/bluebubbles-webhook?password=secret-token", {
+      const req = createMockRequest("POST", `/bluebubbles-webhook?password=${encodeURIComponent(urlTestPass)}`, {
         type: "new-message",
         data: {
           text: "hello",
@@ -778,7 +785,8 @@ describe("BlueBubbles webhook monitor", () => {
     });
 
     it("requires authentication for loopback requests when password is configured", async () => {
-      const account = createMockAccount({ password: "secret-token" });
+      const urlTestPass = MOCK_PASSWORD;
+      const account = createMockAccount({ password: urlTestPass });
       const config: OpenClawConfig = {};
       const core = createMockRuntime();
       setBlueBubblesRuntime(core);
@@ -3083,12 +3091,14 @@ describe("BlueBubbles webhook monitor", () => {
         return { resolved: true, entries: [] };
       });
 
+      const urlTestPassA = MOCK_PASSWORD;
+      const urlTestPassB = MOCK_PASSWORD_B;
       const accountA: ResolvedBlueBubblesAccount = {
-        ...createMockAccount({ dmHistoryLimit: 3, password: "password-a" }),
+        ...createMockAccount({ dmHistoryLimit: 3, password: urlTestPassA }),
         accountId: "acc-a",
       };
       const accountB: ResolvedBlueBubblesAccount = {
-        ...createMockAccount({ dmHistoryLimit: 3, password: "password-b" }),
+        ...createMockAccount({ dmHistoryLimit: 3, password: urlTestPassB }),
         accountId: "acc-b",
       };
       const config: OpenClawConfig = {};
@@ -3115,7 +3125,7 @@ describe("BlueBubbles webhook monitor", () => {
       };
 
       await handleBlueBubblesWebhookRequest(
-        createMockRequest("POST", "/bluebubbles-webhook?password=password-a", {
+        createMockRequest("POST", `/bluebubbles-webhook?password=${encodeURIComponent(urlTestPassA)}`, {
           type: "new-message",
           data: {
             text: "message for account a",
@@ -3132,7 +3142,7 @@ describe("BlueBubbles webhook monitor", () => {
       await flushAsync();
 
       await handleBlueBubblesWebhookRequest(
-        createMockRequest("POST", "/bluebubbles-webhook?password=password-b", {
+        createMockRequest("POST", `/bluebubbles-webhook?password=${encodeURIComponent(urlTestPassB)}`, {
           type: "new-message",
           data: {
             text: "message for account b",

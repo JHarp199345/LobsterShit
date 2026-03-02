@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { BlueBubblesConfigSchema } from "./config-schema.js";
+import { MOCK_PASSWORD } from "./test-fixtures.js";
 
 describe("BlueBubblesConfigSchema", () => {
   it("accepts account config when serverUrl and password are both set", () => {
     const parsed = BlueBubblesConfigSchema.safeParse({
       serverUrl: "http://localhost:1234",
-      password: "secret",
+      password: MOCK_PASSWORD,
     });
     expect(parsed.success).toBe(true);
   });

@@ -105,9 +105,7 @@ export const discordPlugin: ChannelPlugin<ResolvedDiscordAccount> = {
       tokenSource: account.tokenSource,
     }),
     resolveAllowFrom: ({ cfg, accountId }) =>
-      (resolveDiscordAccount({ cfg, accountId }).config.dm?.allowFrom ?? []).map((entry) =>
-        String(entry),
-      ),
+      (resolveDiscordAccount({ cfg, accountId }).config.dm?.allowFrom ?? []).map(String),
     formatAllowFrom: ({ allowFrom }) =>
       allowFrom
         .map((entry) => String(entry).trim())
@@ -213,7 +211,7 @@ export const discordPlugin: ChannelPlugin<ResolvedDiscordAccount> = {
           name:
             entry.channelName ??
             entry.guildName ??
-            (entry.guildId && !entry.channelId ? entry.guildId : undefined),
+            (!entry.channelId && entry.guildId ? entry.guildId : undefined),
           note: entry.note,
         }));
       }

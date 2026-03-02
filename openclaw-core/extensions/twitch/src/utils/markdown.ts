@@ -33,19 +33,19 @@ export function stripMarkdownForTwitch(markdown: string): string {
       // Strikethrough (~~text~~)
       .replace(/~~([^~]+)~~/g, "$1")
       // Code blocks
-      .replace(/```[\s\S]*?```/g, (block) => block.replace(/```[^\n]*\n?/g, "").replace(/```/g, ""))
+      .replaceAll(/```[\s\S]*?```/g, (block) => block.replaceAll(/```[^\n]*\n?/g, "").replaceAll(/```/g, ""))
       // Inline code
       .replace(/`([^`]+)`/g, "$1")
       // Headers
-      .replace(/^#{1,6}\s+/gm, "")
+      .replaceAll(/^#{1,6}\s+/gm, "")
       // Lists
-      .replace(/^\s*[-*+]\s+/gm, "")
-      .replace(/^\s*\d+\.\s+/gm, "")
+      .replaceAll(/^\s*[-*+]\s+/gm, "")
+      .replaceAll(/^\s*\d+\.\s+/gm, "")
       // Normalize whitespace
-      .replace(/\r/g, "") // Remove carriage returns
-      .replace(/[ \t]+\n/g, "\n") // Remove trailing spaces before newlines
-      .replace(/\n/g, " ") // Replace newlines with spaces (for Twitch)
-      .replace(/[ \t]{2,}/g, " ") // Reduce multiple spaces to single
+      .replaceAll(/\r/g, "") // Remove carriage returns
+      .replaceAll(/[ \t]+\n/g, "\n") // Remove trailing spaces before newlines
+      .replaceAll(/\n/g, " ") // Replace newlines with spaces (for Twitch)
+      .replaceAll(/[ \t]{2,}/g, " ") // Reduce multiple spaces to single
       .trim()
   );
 }

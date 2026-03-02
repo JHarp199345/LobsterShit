@@ -36,7 +36,9 @@ export function resolveMatrixRoomConfig(params: {
   const resolved = matched ?? wildcardEntry;
   const allowed = resolved ? resolved.enabled !== false && resolved.allow !== false : false;
   const matchKey = matchedKey ?? wildcardKey;
-  const matchSource = matched ? "direct" : wildcardEntry ? "wildcard" : undefined;
+  let matchSource: "direct" | "wildcard" | undefined;
+  if (matched) matchSource = "direct";
+  else if (wildcardEntry) matchSource = "wildcard";
   return {
     allowed,
     allowlistConfigured,

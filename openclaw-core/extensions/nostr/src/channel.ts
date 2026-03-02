@@ -1,3 +1,4 @@
+import { truncateTo } from "../../shared/preview-text.js";
 import {
   buildChannelConfigSchema,
   collectStatusIssuesFromLastError,
@@ -211,7 +212,7 @@ export const nostrPlugin: ChannelPlugin<ResolvedNostrAccount> = {
         relays: account.relays,
         onMessage: async (senderPubkey, text, reply) => {
           ctx.log?.debug?.(
-            `[${account.accountId}] DM from ${senderPubkey}: ${text.slice(0, 50)}...`,
+            `[${account.accountId}] DM from ${senderPubkey}: ${truncateTo(text, 50, { ellipsis: "..." })}`,
           );
 
           // Forward to OpenClaw's message pipeline

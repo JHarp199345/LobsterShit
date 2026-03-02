@@ -1,3 +1,4 @@
+import { validateRequired } from "../../shared/validation.js";
 import type {
   ChannelOnboardingAdapter,
   ChannelOnboardingDmPolicy,
@@ -275,7 +276,7 @@ export const zaloOnboardingAdapter: ChannelOnboardingAdapter = {
         token = String(
           await prompter.text({
             message: "Enter Zalo bot token",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            validate: validateRequired,
           }),
         ).trim();
       }
@@ -288,7 +289,7 @@ export const zaloOnboardingAdapter: ChannelOnboardingAdapter = {
         token = String(
           await prompter.text({
             message: "Enter Zalo bot token",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            validate: validateRequired,
           }),
         ).trim();
       }
@@ -296,7 +297,7 @@ export const zaloOnboardingAdapter: ChannelOnboardingAdapter = {
       token = String(
         await prompter.text({
           message: "Enter Zalo bot token",
-          validate: (value) => (value?.trim() ? undefined : "Required"),
+          validate: validateRequired,
         }),
       ).trim();
     }

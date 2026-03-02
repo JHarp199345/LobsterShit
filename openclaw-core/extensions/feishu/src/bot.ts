@@ -1,4 +1,5 @@
 import type { ClawdbotConfig, RuntimeEnv } from "openclaw/plugin-sdk";
+import { truncatePreview, truncateTo } from "../../../shared/preview-text.js";
 import {
   buildAgentMediaPayload,
   buildPendingHistoryContextFromMap,
@@ -818,7 +819,7 @@ export async function handleFeishuMessage(params: {
       }
     }
 
-    const preview = ctx.content.replace(/\s+/g, " ").slice(0, 160);
+    const preview = truncatePreview(ctx.content, 160);
     const inboundLabel = isGroup
       ? `Feishu[${account.accountId}] message in group ${ctx.chatId}`
       : `Feishu[${account.accountId}] DM from ${ctx.senderOpenId}`;
@@ -853,7 +854,7 @@ export async function handleFeishuMessage(params: {
         if (quotedMsg) {
           quotedContent = quotedMsg.content;
           log(
-            `feishu[${account.accountId}]: fetched quoted message: ${quotedContent?.slice(0, 100)}`,
+            `feishu[${account.accountId}]: fetched quoted message: ${truncateTo(quotedContent, 100)}`,
           );
         }
       } catch (err) {

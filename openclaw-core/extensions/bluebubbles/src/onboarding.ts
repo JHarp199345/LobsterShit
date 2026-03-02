@@ -1,3 +1,4 @@
+import { validateRequired } from "../../shared/validation.js";
 import type {
   ChannelOnboardingAdapter,
   ChannelOnboardingDmPolicy,
@@ -233,7 +234,7 @@ export const blueBubblesOnboardingAdapter: ChannelOnboardingAdapter = {
       );
       const entered = await prompter.text({
         message: "BlueBubbles password",
-        validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+        validate: validateRequired,
       });
       password = String(entered).trim();
     } else {
@@ -244,7 +245,7 @@ export const blueBubblesOnboardingAdapter: ChannelOnboardingAdapter = {
       if (!keepPassword) {
         const entered = await prompter.text({
           message: "BlueBubbles password",
-          validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+          validate: validateRequired,
         });
         password = String(entered).trim();
       }

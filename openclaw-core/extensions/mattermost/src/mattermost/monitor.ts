@@ -5,6 +5,8 @@ import type {
   ReplyPayload,
   RuntimeEnv,
 } from "openclaw/plugin-sdk";
+import { escapeForRegex } from "../../../shared/regex.js";
+import { previewForLog, truncatePreview } from "../../../shared/preview-text.js";
 import {
   buildAgentMediaPayload,
   DM_GROUP_ACCESS_REASON,
@@ -100,9 +102,9 @@ function normalizeMention(text: string, mention: string | undefined): string {
   if (!mention) {
     return text.trim();
   }
-  const escaped = mention.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const escaped = escapeForRegex(mention);
   const re = new RegExp(`@${escaped}\\b`, "gi");
-  return text.replace(re, " ").replace(/\s+/g, " ").trim();
+  return text.replace(re, " ").replaceAll(/\s+/g, " ").trim();
 }
 
 function isSystemPost(post: MattermostPost): boolean {
@@ -328,7 +330,10 @@ export async function monitorMattermostProvider(opts: MonitorMattermostOpts = {}
       return;
     }
 
-    const allMessageIds = messageIds?.length ? messageIds : post.id ? [post.id] : [];
+    let allMessageIds: string[];
+    if (messageIds?.length) allMessageIds = messageIds;
+    else if (post.id) allMessageIds = [post.id];
+    else allMessageIds = [];
     if (allMessageIds.length === 0) {
       return;
     }
@@ -596,7 +601,7 @@ export async function monitorMattermostProvider(opts: MonitorMattermostOpts = {}
       directId: senderId,
     });
 
-    const preview = bodyText.replace(/\s+/g, " ").slice(0, 160);
+    const preview = truncatePreview(bodyText, 160);
     const inboundLabel =
       kind === "direct"
         ? `Mattermost DM from ${senderName}`
@@ -702,7 +707,7 @@ export async function monitorMattermostProvider(opts: MonitorMattermostOpts = {}
       });
     }
 
-    const previewLine = bodyText.slice(0, 200).replace(/\n/g, "\\n");
+    const previewLine = previewForLog(bodyText, 200);
     logVerboseMessage(
       `mattermost inbound: from=${ctxPayload.From} len=${bodyText.length} preview="${previewLine}"`,
     );

@@ -1,4 +1,5 @@
 import type { LocationMessageEventContent, MatrixClient } from "@vector-im/matrix-bot-sdk";
+import { previewForLog, truncatePreview } from "../../../../shared/preview-text.js";
 import {
   DEFAULT_ACCOUNT_ID,
   createScopedPairingAccess,
@@ -517,7 +518,11 @@ export function createMatrixRoomMessageHandler(params: MatrixMonitorHandlerParam
         To: `room:${roomId}`,
         SessionKey: route.sessionKey,
         AccountId: route.accountId,
-        ChatType: threadRootId ? "thread" : isDirectMessage ? "direct" : "channel",
+        ChatType: (() => {
+          if (threadRootId) return "thread";
+          if (isDirectMessage) return "direct";
+          return "channel";
+        })(),
         ConversationLabel: envelopeFrom,
         SenderName: senderName,
         SenderId: senderId,
@@ -566,7 +571,7 @@ export function createMatrixRoomMessageHandler(params: MatrixMonitorHandlerParam
         },
       });
 
-      const preview = bodyText.slice(0, 200).replace(/\n/g, "\\n");
+      const preview = previewForLog(bodyText, 200);
       logVerboseMessage(`matrix inbound: room=${roomId} from=${senderId} preview="${preview}"`);
 
       const ackReaction = (cfg.messages?.ackReaction ?? "").trim();
@@ -681,7 +686,7 @@ export function createMatrixRoomMessageHandler(params: MatrixMonitorHandlerParam
         `matrix: delivered ${finalCount} reply${finalCount === 1 ? "" : "ies"} to ${replyTarget}`,
       );
       if (didSendReply) {
-        const previewText = bodyText.replace(/\s+/g, " ").slice(0, 160);
+        const previewText = truncatePreview(bodyText, 160);
         core.system.enqueueSystemEvent(`Matrix message from ${senderName}: ${previewText}`, {
           sessionKey: route.sessionKey,
           contextKey: `matrix:message:${roomId}:${messageId || "unknown"}`,

@@ -3,7 +3,7 @@ import { searchGraphUsers } from "./graph-users.js";
 import { fetchGraphJson } from "./graph.js";
 
 vi.mock("./graph.js", () => ({
-  escapeOData: vi.fn((value: string) => value.replace(/'/g, "''")),
+  escapeOData: vi.fn((value: string) => value.replaceAll(/'/g, "''")),
   fetchGraphJson: vi.fn(),
 }));
 

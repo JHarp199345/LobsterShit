@@ -82,8 +82,8 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): 
 }
 
 function buildFallbackNick(nick: string): string {
-  const normalized = nick.replace(/\s+/g, "");
-  const safe = normalized.replace(/[^A-Za-z0-9_\-\[\]\\`^{}|]/g, "");
+  const normalized = nick.replaceAll(/\s+/g, "");
+  const safe = normalized.replaceAll(/[^A-Za-z0-9_\-\[\]\\`^{}|]/g, "");
   const base = safe || "openclaw";
   const suffix = "_";
   const maxNickLen = 30;
@@ -118,10 +118,10 @@ export async function connectIrcClient(options: IrcClientOptions): Promise<IrcCl
   const messageChunkMaxChars =
     options.messageChunkMaxChars != null ? options.messageChunkMaxChars : 350;
 
-  if (!options.host.trim()) {
+  if (options.host.trim() === "") {
     throw new Error("IRC host is required");
   }
-  if (!options.nick.trim()) {
+  if (options.nick.trim() === "") {
     throw new Error("IRC nick is required");
   }
 
@@ -162,7 +162,7 @@ export async function connectIrcClient(options: IrcClientOptions): Promise<IrcCl
   };
 
   const sendRaw = (line: string) => {
-    const cleaned = line.replace(/[\r\n]+/g, "").trim();
+    const cleaned = line.replaceAll(/[\r\n]+/g, "").trim();
     if (!cleaned) {
       throw new Error("IRC command cannot be empty");
     }
@@ -281,7 +281,7 @@ export async function connectIrcClient(options: IrcClientOptions): Promise<IrcCl
 
       if (line.command === "PING") {
         const payload =
-          line.trailing != null ? line.trailing : line.params[0] != null ? line.params[0] : "";
+          line.trailing ?? line.params[0] ?? "";
         sendRaw(`PONG :${payload}`);
         continue;
       }

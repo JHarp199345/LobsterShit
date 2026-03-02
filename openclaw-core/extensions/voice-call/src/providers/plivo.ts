@@ -446,7 +446,7 @@ export class PlivoProvider implements VoiceCallProvider {
     if (trimmed.toLowerCase().startsWith("sip:")) {
       return trimmed;
     }
-    return trimmed.replace(/[^\d+]/g, "");
+    return trimmed.replaceAll(/[^\d+]/g, "");
   }
 
   private static xmlEmpty(): string {

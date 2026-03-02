@@ -1,6 +1,7 @@
 import type { PluginRuntime } from "openclaw/plugin-sdk";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import "./test-mocks.js";
+import { MOCK_PASSWORD } from "./test-fixtures.js";
 import { getCachedBlueBubblesPrivateApiStatus } from "./probe.js";
 import { clearBlueBubblesRuntime, setBlueBubblesRuntime } from "./runtime.js";
 import { sendMessageBlueBubbles, resolveChatGuidForTarget } from "./send.js";
@@ -76,7 +77,7 @@ describe("send", () => {
       };
       return await resolveChatGuidForTarget({
         baseUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
         target,
       });
     };
@@ -88,7 +89,7 @@ describe("send", () => {
       };
       const result = await resolveChatGuidForTarget({
         baseUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
         target,
       });
       expect(result).toBe("iMessage;-;+15551234567");
@@ -110,7 +111,7 @@ describe("send", () => {
       const target: BlueBubblesSendTarget = { kind: "chat_id", chatId: 456 };
       const result = await resolveChatGuidForTarget({
         baseUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
         target,
       });
 
@@ -142,7 +143,7 @@ describe("send", () => {
       };
       const result = await resolveChatGuidForTarget({
         baseUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
         target,
       });
 
@@ -169,7 +170,7 @@ describe("send", () => {
       };
       const result = await resolveChatGuidForTarget({
         baseUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
         target,
       });
 
@@ -239,7 +240,7 @@ describe("send", () => {
       };
       const result = await resolveChatGuidForTarget({
         baseUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
         target,
       });
 
@@ -256,7 +257,7 @@ describe("send", () => {
       const target: BlueBubblesSendTarget = { kind: "chat_id", chatId: 999 };
       const result = await resolveChatGuidForTarget({
         baseUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
         target,
       });
 
@@ -272,7 +273,7 @@ describe("send", () => {
       const target: BlueBubblesSendTarget = { kind: "chat_id", chatId: 123 };
       const result = await resolveChatGuidForTarget({
         baseUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
         target,
       });
 
@@ -305,7 +306,7 @@ describe("send", () => {
       const target: BlueBubblesSendTarget = { kind: "chat_id", chatId: 555 };
       const result = await resolveChatGuidForTarget({
         baseUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
         target,
       });
 
@@ -334,7 +335,7 @@ describe("send", () => {
       };
       const result = await resolveChatGuidForTarget({
         baseUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
         target,
       });
 
@@ -359,7 +360,7 @@ describe("send", () => {
       const target: BlueBubblesSendTarget = { kind: "chat_id", chatId: 100 };
       const result = await resolveChatGuidForTarget({
         baseUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
         target,
       });
 
@@ -376,7 +377,7 @@ describe("send", () => {
       await expect(
         sendMessageBlueBubbles("+15551234567", "", {
           serverUrl: "http://localhost:1234",
-          password: "test",
+          password: MOCK_PASSWORD,
         }),
       ).rejects.toThrow("requires text");
     });
@@ -385,7 +386,7 @@ describe("send", () => {
       await expect(
         sendMessageBlueBubbles("+15551234567", "   ", {
           serverUrl: "http://localhost:1234",
-          password: "test",
+          password: MOCK_PASSWORD,
         }),
       ).rejects.toThrow("requires text");
     });
@@ -395,7 +396,7 @@ describe("send", () => {
       await expect(
         sendMessageBlueBubbles("+15551234567", "***", {
           serverUrl: "http://localhost:1234",
-          password: "test",
+          password: MOCK_PASSWORD,
         }),
       ).rejects.toThrow("empty after markdown removal");
     });
@@ -423,7 +424,7 @@ describe("send", () => {
       await expect(
         sendMessageBlueBubbles("chat_id:999", "Hello", {
           serverUrl: "http://localhost:1234",
-          password: "test",
+          password: MOCK_PASSWORD,
         }),
       ).rejects.toThrow("chatGuid not found");
     });
@@ -434,7 +435,7 @@ describe("send", () => {
 
       const result = await sendMessageBlueBubbles("+15551234567", "Hello world!", {
         serverUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
       });
 
       expect(result.messageId).toBe("msg-uuid-123");
@@ -457,7 +458,7 @@ describe("send", () => {
         "**Bold** and *italic* with `code`\n## Header",
         {
           serverUrl: "http://localhost:1234",
-          password: "test",
+          password: MOCK_PASSWORD,
         },
       );
 
@@ -474,7 +475,7 @@ describe("send", () => {
 
       const result = await sendMessageBlueBubbles("+15550009999", "**Welcome** to the _chat_!", {
         serverUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
       });
 
       expect(result.messageId).toBe("new-msg-stripped");
@@ -491,7 +492,7 @@ describe("send", () => {
 
       const result = await sendMessageBlueBubbles("+15550009999", "Hello new chat", {
         serverUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
       });
 
       expect(result.messageId).toBe("new-msg-guid");
@@ -519,7 +520,7 @@ describe("send", () => {
       await expect(
         sendMessageBlueBubbles("+15550008888", "Hello", {
           serverUrl: "http://localhost:1234",
-          password: "test",
+          password: MOCK_PASSWORD,
         }),
       ).rejects.toThrow("Private API must be enabled");
     });
@@ -534,7 +535,7 @@ describe("send", () => {
 
       const result = await sendMessageBlueBubbles("+15551234567", "Replying", {
         serverUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
         replyToMessageGuid: "reply-guid-123",
         replyToPartIndex: 1,
       });
@@ -559,7 +560,7 @@ describe("send", () => {
 
       const result = await sendMessageBlueBubbles("+15551234567", "Reply fallback", {
         serverUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
         replyToMessageGuid: "reply-guid-123",
         replyToPartIndex: 1,
       });
@@ -582,7 +583,7 @@ describe("send", () => {
 
       const result = await sendMessageBlueBubbles("+15551234567", "Hello", {
         serverUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
         effectId: "invisible ink",
       });
 
@@ -605,7 +606,7 @@ describe("send", () => {
       try {
         const result = await sendMessageBlueBubbles("+15551234567", "Reply fallback", {
           serverUrl: "http://localhost:1234",
-          password: "test",
+          password: MOCK_PASSWORD,
           replyToMessageGuid: "reply-guid-123",
           effectId: "invisible ink",
         });
@@ -643,7 +644,7 @@ describe("send", () => {
         "Direct message",
         {
           serverUrl: "http://localhost:1234",
-          password: "test",
+          password: MOCK_PASSWORD,
         },
       );
 
@@ -662,7 +663,7 @@ describe("send", () => {
       await expect(
         sendMessageBlueBubbles("+15551234567", "Hello", {
           serverUrl: "http://localhost:1234",
-          password: "test",
+          password: MOCK_PASSWORD,
         }),
       ).rejects.toThrow("send failed (500)");
     });
@@ -676,7 +677,7 @@ describe("send", () => {
 
       const result = await sendMessageBlueBubbles("+15551234567", "Hello", {
         serverUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
       });
 
       expect(result.messageId).toBe("ok");
@@ -691,7 +692,7 @@ describe("send", () => {
 
       const result = await sendMessageBlueBubbles("+15551234567", "Hello", {
         serverUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
       });
 
       expect(result.messageId).toBe("ok");
@@ -703,7 +704,7 @@ describe("send", () => {
 
       const result = await sendMessageBlueBubbles("+15551234567", "Hello", {
         serverUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
       });
 
       expect(result.messageId).toBe("numeric-id-456");
@@ -715,13 +716,14 @@ describe("send", () => {
 
       const result = await sendMessageBlueBubbles("+15551234567", "Hello", {
         serverUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
       });
 
       expect(result.messageId).toBe("msg-guid-789");
     });
 
     it("resolves credentials from config", async () => {
+      const urlTestPass = MOCK_PASSWORD;
       mockResolvedHandleTarget();
       mockSendResponse({ data: { guid: "msg-123" } });
 
@@ -730,7 +732,7 @@ describe("send", () => {
           channels: {
             bluebubbles: {
               serverUrl: "http://config-server:5678",
-              password: "config-pass",
+              password: urlTestPass,
             },
           },
         },
@@ -739,6 +741,7 @@ describe("send", () => {
       expect(result.messageId).toBe("msg-123");
       const calledUrl = mockFetch.mock.calls[0][0] as string;
       expect(calledUrl).toContain("config-server:5678");
+      expect(calledUrl).toContain(`password=${urlTestPass}`);
     });
 
     it("includes tempGuid in request payload", async () => {
@@ -747,7 +750,7 @@ describe("send", () => {
 
       await sendMessageBlueBubbles("+15551234567", "Hello", {
         serverUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
       });
 
       const sendCall = mockFetch.mock.calls[1];

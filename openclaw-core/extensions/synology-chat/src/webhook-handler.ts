@@ -5,6 +5,7 @@
 
 import type { IncomingMessage, ServerResponse } from "node:http";
 import * as querystring from "node:querystring";
+import { truncateTo } from "../../shared/preview-text.js";
 import { sendMessage } from "./client.js";
 import { validateToken, authorizeUserForDm, sanitizeInput, RateLimiter } from "./security.js";
 import type { SynologyWebhookPayload, ResolvedSynologyChatAccount } from "./types.js";
@@ -176,7 +177,7 @@ export function createWebhookHandler(deps: WebhookHandlerDeps) {
       return;
     }
 
-    const preview = cleanText.length > 100 ? `${cleanText.slice(0, 100)}...` : cleanText;
+    const preview = truncateTo(cleanText, 100, { ellipsis: "..." });
     log?.info(`Message from ${payload.username} (${payload.user_id}): ${preview}`);
 
     // Respond 200 immediately to avoid Synology Chat timeout
@@ -204,7 +205,7 @@ export function createWebhookHandler(deps: WebhookHandlerDeps) {
       // Send reply back to Synology Chat
       if (reply) {
         await sendMessage(account.incomingUrl, reply, payload.user_id, account.allowInsecureSsl);
-        const replyPreview = reply.length > 100 ? `${reply.slice(0, 100)}...` : reply;
+        const replyPreview = truncateTo(reply, 100, { ellipsis: "..." });
         log?.info(`Reply sent to ${payload.username} (${payload.user_id}): ${replyPreview}`);
       }
     } catch (err) {

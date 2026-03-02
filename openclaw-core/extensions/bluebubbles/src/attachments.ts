@@ -35,7 +35,7 @@ function sanitizeFilename(input: string | undefined, fallback: string): string {
   const base = trimmed ? path.basename(trimmed) : "";
   const name = base || fallback;
   // Strip characters that could enable multipart header injection (CWE-93)
-  return name.replace(/[\r\n"\\]/g, "_");
+  return name.replaceAll(/[\r\n"\\]/g, "_");
 }
 
 function ensureExtension(filename: string, extension: string, fallbackBase: string): string {
@@ -104,11 +104,11 @@ export async function downloadBlueBubblesAttachment(
       url,
       filePathHint: attachment.transferName ?? attachment.guid ?? "attachment",
       maxBytes,
-      ssrfPolicy: allowPrivateNetwork
-        ? { allowPrivateNetwork: true }
-        : trustedHostname
-          ? { allowedHostnames: [trustedHostname] }
-          : undefined,
+      ssrfPolicy: (() => {
+        if (allowPrivateNetwork) return { allowPrivateNetwork: true };
+        if (trustedHostname) return { allowedHostnames: [trustedHostname] };
+        return undefined;
+      })(),
       fetchImpl: async (input, init) =>
         await blueBubblesFetchWithTimeout(
           resolveRequestUrl(input),
@@ -199,7 +199,7 @@ export async function sendBlueBubblesAttachment(params: {
   });
 
   // Build FormData with the attachment
-  const boundary = `----BlueBubblesFormBoundary${crypto.randomUUID().replace(/-/g, "")}`;
+  const boundary = `----BlueBubblesFormBoundary${crypto.randomUUID().replaceAll(/-/g, "")}`;
   const parts: Uint8Array[] = [];
   const encoder = new TextEncoder();
 

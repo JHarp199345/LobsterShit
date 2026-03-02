@@ -104,9 +104,7 @@ export const bluebubblesPlugin: ChannelPlugin<ResolvedBlueBubblesAccount> = {
       baseUrl: account.baseUrl,
     }),
     resolveAllowFrom: ({ cfg, accountId }) =>
-      (resolveBlueBubblesAccount({ cfg: cfg, accountId }).config.allowFrom ?? []).map((entry) =>
-        String(entry),
-      ),
+      (resolveBlueBubblesAccount({ cfg: cfg, accountId }).config.allowFrom ?? []).map(String),
     formatAllowFrom: ({ allowFrom }) =>
       allowFrom
         .map((entry) => String(entry).trim())
@@ -243,12 +241,12 @@ export const bluebubblesPlugin: ChannelPlugin<ResolvedBlueBubblesAccount> = {
         name: input.name,
       });
       const next =
-        accountId !== DEFAULT_ACCOUNT_ID
-          ? migrateBaseNameToDefaultAccount({
+        accountId === DEFAULT_ACCOUNT_ID
+          ? namedConfig
+          : migrateBaseNameToDefaultAccount({
               cfg: namedConfig,
               channelKey: "bluebubbles",
-            })
-          : namedConfig;
+            });
       if (accountId === DEFAULT_ACCOUNT_ID) {
         return {
           ...next,

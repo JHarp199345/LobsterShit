@@ -2,7 +2,7 @@ export function normalizePhoneNumber(input?: string): string {
   if (!input) {
     return "";
   }
-  return input.replace(/\D/g, "");
+  return input.replaceAll(/\D/g, "");
 }
 
 export function isAllowlistedCaller(

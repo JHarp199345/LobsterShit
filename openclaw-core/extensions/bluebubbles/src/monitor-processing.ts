@@ -1,4 +1,5 @@
 import type { OpenClawConfig } from "openclaw/plugin-sdk";
+import { truncatePreview, truncateTo } from "../../shared/preview-text.js";
 import {
   DM_GROUP_ACCESS_REASON,
   createScopedPairingAccess,
@@ -74,7 +75,7 @@ function trimOrUndefined(value?: string | null): string | undefined {
 }
 
 function normalizeSnippet(value: string): string {
-  return stripMarkdown(value).replace(/\s+/g, " ").trim().toLowerCase();
+  return stripMarkdown(value).replaceAll(/\s+/g, " ").trim().toLowerCase();
 }
 
 function prunePendingOutboundMessageIds(now = Date.now()): void {
@@ -485,7 +486,7 @@ export async function processMessage(
         const displayId = getShortIdForUuid(cacheMessageId) || cacheMessageId;
         const previewSource = pending.snippetRaw || rawBody;
         const preview = previewSource
-          ? ` "${previewSource.slice(0, 12)}${previewSource.length > 12 ? "…" : ""}"`
+          ? ` "${truncateTo(previewSource, 12, { ellipsis: "…" })}"`
           : "";
         core.system.enqueueSystemEvent(`Assistant sent${preview} [message_id:${displayId}]`, {
           sessionKey: pending.sessionKey,
@@ -508,7 +509,7 @@ export async function processMessage(
 
   const dmPolicy = account.config.dmPolicy ?? "pairing";
   const groupPolicy = account.config.groupPolicy ?? "allowlist";
-  const configuredAllowFrom = (account.config.allowFrom ?? []).map((entry) => String(entry));
+  const configuredAllowFrom = (account.config.allowFrom ?? []).map(String);
   const storeAllowFrom = await readStoreAllowFromForDmPolicy({
     provider: "bluebubbles",
     accountId: account.accountId,
@@ -642,9 +643,12 @@ export async function processMessage(
   const chatId = message.chatId ?? undefined;
   const chatGuid = message.chatGuid ?? undefined;
   const chatIdentifier = message.chatIdentifier ?? undefined;
-  const peerId = isGroup
-    ? (chatGuid ?? chatIdentifier ?? (chatId ? String(chatId) : "group"))
-    : message.senderId;
+  let peerId: string;
+  if (isGroup) {
+    peerId = chatGuid ?? chatIdentifier ?? (chatId != null ? String(chatId) : "group");
+  } else {
+    peerId = message.senderId;
+  }
 
   const route = core.channel.routing.resolveAgentRoute({
     cfg: config,
@@ -810,7 +814,7 @@ export async function processMessage(
       }
       replyToShortId = cached.shortId;
       if (core.logging.shouldLogVerbose()) {
-        const preview = (cached.body ?? "").replace(/\s+/g, " ").slice(0, 120);
+        const preview = truncatePreview(cached.body, 120);
         logVerbose(
           core,
           runtime,
@@ -974,7 +978,7 @@ export async function processMessage(
       timestamp: Date.now(),
     });
     const displayId = cacheEntry.shortId || trimmed;
-    const preview = snippet ? ` "${snippet.slice(0, 12)}${snippet.length > 12 ? "…" : ""}"` : "";
+    const preview = snippet ? ` "${truncateTo(snippet, 12, { ellipsis: "…" })}"` : "";
     core.system.enqueueSystemEvent(`Assistant sent${preview} [message_id:${displayId}]`, {
       sessionKey: route.sessionKey,
       contextKey: `bluebubbles:outbound:${outboundTarget}:${trimmed}`,
@@ -987,7 +991,7 @@ export async function processMessage(
     }
     return value
       .replace(REPLY_DIRECTIVE_TAG_RE, " ")
-      .replace(/[ \t]+/g, " ")
+      .replaceAll(/[ \t]+/g, " ")
       .trim();
   };
 
@@ -1427,9 +1431,12 @@ export async function processReaction(
   const chatId = reaction.chatId ?? undefined;
   const chatGuid = reaction.chatGuid ?? undefined;
   const chatIdentifier = reaction.chatIdentifier ?? undefined;
-  const peerId = reaction.isGroup
-    ? (chatGuid ?? chatIdentifier ?? (chatId ? String(chatId) : "group"))
-    : reaction.senderId;
+  let peerId: string;
+  if (reaction.isGroup) {
+    peerId = chatGuid ?? chatIdentifier ?? (chatId != null ? String(chatId) : "group");
+  } else {
+    peerId = reaction.senderId;
+  }
 
   const route = core.channel.routing.resolveAgentRoute({
     cfg: config,

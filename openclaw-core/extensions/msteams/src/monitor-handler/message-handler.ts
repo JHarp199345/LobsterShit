@@ -1,3 +1,4 @@
+import { truncatePreview, truncateTo } from "../../../shared/preview-text.js";
 import {
   DEFAULT_ACCOUNT_ID,
   buildPendingHistoryContextFromMap,
@@ -109,8 +110,8 @@ export function createMSTeamsMessageHandler(deps: MSTeamsMessageHandlerDeps) {
     const htmlSummary = summarizeMSTeamsHtmlAttachments(attachments);
 
     log.info("received message", {
-      rawText: rawText.slice(0, 50),
-      text: text.slice(0, 50),
+      rawText: truncateTo(rawText, 50),
+      text: truncateTo(text, 50),
       attachments: attachments.length,
       attachmentTypes,
       from: from?.id,
@@ -374,12 +375,16 @@ export function createMSTeamsMessageHandler(deps: MSTeamsMessageHandlerDeps) {
       cfg,
       channel: "msteams",
       peer: {
-        kind: isDirectMessage ? "direct" : isChannel ? "channel" : "group",
+        kind: (() => {
+          if (isDirectMessage) return "direct";
+          if (isChannel) return "channel";
+          return "group";
+        })(),
         id: isDirectMessage ? senderId : conversationId,
       },
     });
 
-    const preview = rawBody.replace(/\s+/g, " ").slice(0, 160);
+    const preview = truncatePreview(rawBody, 160);
     const inboundLabel = isDirectMessage
       ? `Teams DM from ${senderName}`
       : `Teams message in ${conversationType} from ${senderName}`;
@@ -506,9 +511,13 @@ export function createMSTeamsMessageHandler(deps: MSTeamsMessageHandlerDeps) {
       To: teamsTo,
       SessionKey: route.sessionKey,
       AccountId: route.accountId,
-      ChatType: isDirectMessage ? "direct" : isChannel ? "channel" : "group",
+      ChatType: (() => {
+        if (isDirectMessage) return "direct";
+        if (isChannel) return "channel";
+        return "group";
+      })(),
       ConversationLabel: envelopeFrom,
-      GroupSubject: !isDirectMessage ? conversationType : undefined,
+      GroupSubject: isDirectMessage ? undefined : conversationType,
       SenderName: senderName,
       SenderId: senderId,
       Provider: "msteams" as const,

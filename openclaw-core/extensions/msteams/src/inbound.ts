@@ -35,7 +35,7 @@ export function parseMSTeamsActivityTimestamp(value: unknown): Date | undefined 
 
 export function stripMSTeamsMentionTags(text: string): string {
   // Teams wraps mentions in <at>...</at> tags
-  return text.replace(/<at[^>]*>.*?<\/at>/gi, "").trim();
+  return text.replaceAll(/<at[^>]*>.*?<\/at>/gi, "").trim();
 }
 
 export function wasMSTeamsBotMentioned(activity: MentionableActivity): boolean {

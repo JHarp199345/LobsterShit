@@ -174,14 +174,15 @@ export async function handleZaloWebhookRequest(
     emptyObjectOnEmpty: false,
   });
   if (!body.ok) {
-    res.statusCode =
-      body.code === "PAYLOAD_TOO_LARGE" ? 413 : body.code === "REQUEST_BODY_TIMEOUT" ? 408 : 400;
-    const message =
-      body.code === "PAYLOAD_TOO_LARGE"
-        ? requestBodyErrorToText("PAYLOAD_TOO_LARGE")
-        : body.code === "REQUEST_BODY_TIMEOUT"
-          ? requestBodyErrorToText("REQUEST_BODY_TIMEOUT")
-          : "Bad Request";
+    let statusCode = 400;
+    if (body.code === "PAYLOAD_TOO_LARGE") statusCode = 413;
+    else if (body.code === "REQUEST_BODY_TIMEOUT") statusCode = 408;
+    res.statusCode = statusCode;
+    let message: string;
+    if (body.code === "PAYLOAD_TOO_LARGE") message = requestBodyErrorToText("PAYLOAD_TOO_LARGE");
+    else if (body.code === "REQUEST_BODY_TIMEOUT")
+      message = requestBodyErrorToText("REQUEST_BODY_TIMEOUT");
+    else message = "Bad Request";
     res.end(message);
     recordWebhookStatus(target.runtime, path, res.statusCode);
     return true;

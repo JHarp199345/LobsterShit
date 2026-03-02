@@ -130,7 +130,7 @@ export function normalizeBlueBubblesHandle(raw: string): string {
   if (trimmed.includes("@")) {
     return trimmed.toLowerCase();
   }
-  return trimmed.replace(/\s+/g, "");
+  return trimmed.replaceAll(/\s+/g, "");
 }
 
 /**

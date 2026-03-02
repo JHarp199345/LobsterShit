@@ -101,7 +101,7 @@ export function validateTwilioSignature(
 function buildTwilioDataToSign(url: string, params: URLSearchParams): string {
   let dataToSign = url;
   const sortedParams = Array.from(params.entries()).toSorted((a, b) =>
-    a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0,
+    a[0].localeCompare(b[0]),
   );
   for (const [key, value] of sortedParams) {
     dataToSign += key + value;
@@ -111,7 +111,7 @@ function buildTwilioDataToSign(url: string, params: URLSearchParams): string {
 
 function buildCanonicalTwilioParamString(params: URLSearchParams): string {
   return Array.from(params.entries())
-    .toSorted((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
+    .toSorted((a, b) => a[0].localeCompare(b[0]))
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
 }
@@ -417,14 +417,14 @@ function createTwilioReplayKey(params: {
 
 function decodeBase64OrBase64Url(input: string): Buffer {
   // Telnyx docs say Base64; some tooling emits Base64URL. Accept both.
-  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
+  const normalized = input.replaceAll("-", "+").replaceAll("_", "/");
   const padLen = (4 - (normalized.length % 4)) % 4;
   const padded = normalized + "=".repeat(padLen);
   return Buffer.from(padded, "base64");
 }
 
 function base64UrlEncode(buf: Buffer): string {
-  return buf.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  return buf.toString("base64").replaceAll("+", "-").replaceAll("/", "_").replaceAll(/=+$/g, "");
 }
 
 function importEd25519PublicKey(publicKey: string): crypto.KeyObject | string {
@@ -690,8 +690,8 @@ function toParamMapFromSearchParams(sp: URLSearchParams): PlivoParamMap {
 
 function sortedQueryString(params: PlivoParamMap): string {
   const parts: string[] = [];
-  for (const key of Object.keys(params).toSorted()) {
-    const values = [...params[key]].toSorted();
+  for (const key of Object.keys(params).toSorted((a, b) => a.localeCompare(b))) {
+    const values = [...params[key]].toSorted((a, b) => a.localeCompare(b));
     for (const value of values) {
       parts.push(`${key}=${value}`);
     }
@@ -701,8 +701,8 @@ function sortedQueryString(params: PlivoParamMap): string {
 
 function sortedParamsString(params: PlivoParamMap): string {
   const parts: string[] = [];
-  for (const key of Object.keys(params).toSorted()) {
-    const values = [...params[key]].toSorted();
+  for (const key of Object.keys(params).toSorted((a, b) => a.localeCompare(b))) {
+    const values = [...params[key]].toSorted((a, b) => a.localeCompare(b));
     for (const value of values) {
       parts.push(`${key}${value}`);
     }

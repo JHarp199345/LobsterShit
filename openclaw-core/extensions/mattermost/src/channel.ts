@@ -80,7 +80,7 @@ const mattermostMessageActions: ChannelMessageActionAdapter = {
     }
 
     const emojiRaw = typeof (params as any)?.emoji === "string" ? (params as any).emoji : "";
-    const emojiName = emojiRaw.trim().replace(/^:+|:+$/g, "");
+    const emojiName = emojiRaw.trim().replaceAll(/^:+|:+$/g, "");
     if (!emojiName) {
       throw new Error("Mattermost react requires emoji");
     }

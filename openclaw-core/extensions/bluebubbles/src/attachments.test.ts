@@ -1,6 +1,7 @@
 import type { PluginRuntime } from "openclaw/plugin-sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "./test-mocks.js";
+import { MOCK_PASSWORD } from "./test-fixtures.js";
 import { downloadBlueBubblesAttachment, sendBlueBubblesAttachment } from "./attachments.js";
 import { getCachedBlueBubblesPrivateApiStatus } from "./probe.js";
 import { setBlueBubblesRuntime } from "./runtime.js";
@@ -76,7 +77,7 @@ describe("downloadBlueBubblesAttachment", () => {
     await expect(
       downloadBlueBubblesAttachment(attachment, {
         serverUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
         ...(params.maxBytes === undefined ? {} : { maxBytes: params.maxBytes }),
       }),
     ).rejects.toThrow("too large");
@@ -87,7 +88,7 @@ describe("downloadBlueBubblesAttachment", () => {
     await expect(
       downloadBlueBubblesAttachment(attachment, {
         serverUrl: "http://localhost:1234",
-        password: "test-password",
+        password: MOCK_PASSWORD,
       }),
     ).rejects.toThrow("guid is required");
   });
@@ -97,7 +98,7 @@ describe("downloadBlueBubblesAttachment", () => {
     await expect(
       downloadBlueBubblesAttachment(attachment, {
         serverUrl: "http://localhost:1234",
-        password: "test-password",
+        password: MOCK_PASSWORD,
       }),
     ).rejects.toThrow("guid is required");
   });
@@ -129,7 +130,7 @@ describe("downloadBlueBubblesAttachment", () => {
     const attachment: BlueBubblesAttachment = { guid: "att-123" };
     const result = await downloadBlueBubblesAttachment(attachment, {
       serverUrl: "http://localhost:1234",
-      password: "test-password",
+      password: MOCK_PASSWORD,
     });
 
     expect(result.buffer).toEqual(mockBuffer);
@@ -141,6 +142,7 @@ describe("downloadBlueBubblesAttachment", () => {
   });
 
   it("includes password in URL query", async () => {
+    const urlTestPass = MOCK_PASSWORD;
     const mockBuffer = new Uint8Array([1, 2, 3, 4]);
     mockFetch.mockResolvedValueOnce({
       ok: true,
@@ -151,11 +153,11 @@ describe("downloadBlueBubblesAttachment", () => {
     const attachment: BlueBubblesAttachment = { guid: "att-456" };
     await downloadBlueBubblesAttachment(attachment, {
       serverUrl: "http://localhost:1234",
-      password: "my-secret-password",
+      password: urlTestPass,
     });
 
     const calledUrl = mockFetch.mock.calls[0][0] as string;
-    expect(calledUrl).toContain("password=my-secret-password");
+    expect(calledUrl).toContain(`password=${urlTestPass}`);
   });
 
   it("encodes guid in URL", async () => {
@@ -169,7 +171,7 @@ describe("downloadBlueBubblesAttachment", () => {
     const attachment: BlueBubblesAttachment = { guid: "att/with/special chars" };
     await downloadBlueBubblesAttachment(attachment, {
       serverUrl: "http://localhost:1234",
-      password: "test",
+      password: MOCK_PASSWORD,
     });
 
     const calledUrl = mockFetch.mock.calls[0][0] as string;
@@ -187,7 +189,7 @@ describe("downloadBlueBubblesAttachment", () => {
     await expect(
       downloadBlueBubblesAttachment(attachment, {
         serverUrl: "http://localhost:1234",
-        password: "test",
+        password: MOCK_PASSWORD,
       }),
     ).rejects.toThrow("Attachment not found");
   });
@@ -217,7 +219,7 @@ describe("downloadBlueBubblesAttachment", () => {
     };
     const result = await downloadBlueBubblesAttachment(attachment, {
       serverUrl: "http://localhost:1234",
-      password: "test",
+      password: MOCK_PASSWORD,
     });
 
     expect(result.contentType).toBe("video/mp4");
@@ -237,7 +239,7 @@ describe("downloadBlueBubblesAttachment", () => {
     };
     const result = await downloadBlueBubblesAttachment(attachment, {
       serverUrl: "http://localhost:1234",
-      password: "test",
+      password: MOCK_PASSWORD,
     });
 
     expect(result.contentType).toBe("image/webp");
@@ -257,7 +259,7 @@ describe("downloadBlueBubblesAttachment", () => {
         channels: {
           bluebubbles: {
             serverUrl: "http://config-server:5678",
-            password: "config-password",
+            password: MOCK_PASSWORD,
           },
         },
       },
@@ -265,7 +267,7 @@ describe("downloadBlueBubblesAttachment", () => {
 
     const calledUrl = mockFetch.mock.calls[0][0] as string;
     expect(calledUrl).toContain("config-server:5678");
-    expect(calledUrl).toContain("password=config-password");
+    expect(calledUrl).toContain(`password=${MOCK_PASSWORD}`);
     expect(result.buffer).toEqual(new Uint8Array([1]));
   });
 
@@ -283,7 +285,7 @@ describe("downloadBlueBubblesAttachment", () => {
         channels: {
           bluebubbles: {
             serverUrl: "http://localhost:1234",
-            password: "test",
+            password: MOCK_PASSWORD,
             allowPrivateNetwork: true,
           },
         },
@@ -305,7 +307,7 @@ describe("downloadBlueBubblesAttachment", () => {
     const attachment: BlueBubblesAttachment = { guid: "att-no-ssrf" };
     await downloadBlueBubblesAttachment(attachment, {
       serverUrl: "http://localhost:1234",
-      password: "test",
+      password: MOCK_PASSWORD,
     });
 
     const fetchMediaArgs = fetchRemoteMediaMock.mock.calls[0][0] as Record<string, unknown>;
@@ -323,7 +325,7 @@ describe("downloadBlueBubblesAttachment", () => {
     const attachment: BlueBubblesAttachment = { guid: "att-private-ip" };
     await downloadBlueBubblesAttachment(attachment, {
       serverUrl: "http://192.168.1.5:1234",
-      password: "test",
+      password: MOCK_PASSWORD,
     });
 
     const fetchMediaArgs = fetchRemoteMediaMock.mock.calls[0][0] as Record<string, unknown>;
@@ -364,7 +366,7 @@ describe("sendBlueBubblesAttachment", () => {
       filename: "voice.mp3",
       contentType: "audio/mpeg",
       asVoice: true,
-      opts: { serverUrl: "http://localhost:1234", password: "test" },
+      opts: { serverUrl: "http://localhost:1234", password: MOCK_PASSWORD },
     });
 
     const body = mockFetch.mock.calls[0][1]?.body as Uint8Array;
@@ -386,7 +388,7 @@ describe("sendBlueBubblesAttachment", () => {
       filename: "voice",
       contentType: "audio/mpeg",
       asVoice: true,
-      opts: { serverUrl: "http://localhost:1234", password: "test" },
+      opts: { serverUrl: "http://localhost:1234", password: MOCK_PASSWORD },
     });
 
     const body = mockFetch.mock.calls[0][1]?.body as Uint8Array;
@@ -403,7 +405,7 @@ describe("sendBlueBubblesAttachment", () => {
         filename: "image.png",
         contentType: "image/png",
         asVoice: true,
-        opts: { serverUrl: "http://localhost:1234", password: "test" },
+        opts: { serverUrl: "http://localhost:1234", password: MOCK_PASSWORD },
       }),
     ).rejects.toThrow("voice messages require audio");
     expect(mockFetch).not.toHaveBeenCalled();
@@ -417,7 +419,7 @@ describe("sendBlueBubblesAttachment", () => {
         filename: "voice.wav",
         contentType: "audio/wav",
         asVoice: true,
-        opts: { serverUrl: "http://localhost:1234", password: "test" },
+        opts: { serverUrl: "http://localhost:1234", password: MOCK_PASSWORD },
       }),
     ).rejects.toThrow("require mp3 or caf");
     expect(mockFetch).not.toHaveBeenCalled();
@@ -434,7 +436,7 @@ describe("sendBlueBubblesAttachment", () => {
       buffer: new Uint8Array([1, 2, 3]),
       filename: "../evil.mp3",
       contentType: "audio/mpeg",
-      opts: { serverUrl: "http://localhost:1234", password: "test" },
+      opts: { serverUrl: "http://localhost:1234", password: MOCK_PASSWORD },
     });
 
     const body = mockFetch.mock.calls[0][1]?.body as Uint8Array;
@@ -459,7 +461,7 @@ describe("sendBlueBubblesAttachment", () => {
       filename: "photo.jpg",
       contentType: "image/jpeg",
       replyToMessageGuid: "reply-guid-123",
-      opts: { serverUrl: "http://localhost:1234", password: "test" },
+      opts: { serverUrl: "http://localhost:1234", password: MOCK_PASSWORD },
     });
 
     const body = mockFetch.mock.calls[0][1]?.body as Uint8Array;
@@ -486,7 +488,7 @@ describe("sendBlueBubblesAttachment", () => {
       filename: "photo.jpg",
       contentType: "image/jpeg",
       replyToMessageGuid: "reply-guid-unknown",
-      opts: { serverUrl: "http://localhost:1234", password: "test" },
+      opts: { serverUrl: "http://localhost:1234", password: MOCK_PASSWORD },
     });
 
     expect(runtimeLog).toHaveBeenCalledTimes(1);

@@ -1,3 +1,4 @@
+import { validateRequired } from "../../shared/validation.js";
 import type { ChannelOnboardingAdapter, OpenClawConfig, WizardPrompter } from "openclaw/plugin-sdk";
 import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "openclaw/plugin-sdk/account-id";
 import {
@@ -29,13 +30,13 @@ async function promptMattermostCredentials(prompter: WizardPrompter): Promise<{
   const botToken = String(
     await prompter.text({
       message: "Enter Mattermost bot token",
-      validate: (value) => (value?.trim() ? undefined : "Required"),
+      validate: validateRequired,
     }),
   ).trim();
   const baseUrl = String(
     await prompter.text({
       message: "Enter Mattermost base URL",
-      validate: (value) => (value?.trim() ? undefined : "Required"),
+      validate: validateRequired,
     }),
   ).trim();
   return { botToken, baseUrl };

@@ -10,7 +10,7 @@ function sanitizeSegment(value: string): string {
   if (!trimmed) {
     return "default";
   }
-  return trimmed.replace(/[^a-zA-Z0-9_-]/g, "_");
+  return trimmed.replaceAll(/[^a-zA-Z0-9_-]/g, "_");
 }
 
 function buildReplayKey(params: { roomToken: string; messageId: string }): string | null {

@@ -33,7 +33,9 @@ const GROUP_COMMANDS: Record<Exclude<ArmGroup, "all">, string[]> = {
 };
 
 function uniqSorted(values: string[]): string[] {
-  return [...new Set(values.map((v) => v.trim()).filter(Boolean))].toSorted();
+  return [...new Set(values.map((v) => v.trim()).filter(Boolean))].toSorted((a, b) =>
+    a.localeCompare(b),
+  );
 }
 
 function resolveCommandsForGroup(group: ArmGroup): string[] {
@@ -64,7 +66,11 @@ function parseDurationMs(input: string | undefined): number | null {
     return null;
   }
   const unit = m[2];
-  const mult = unit === "s" ? 1000 : unit === "m" ? 60_000 : unit === "h" ? 3_600_000 : 86_400_000;
+  let mult: number;
+  if (unit === "s") mult = 1000;
+  else if (unit === "m") mult = 60_000;
+  else if (unit === "h") mult = 3_600_000;
+  else mult = 86_400_000;
   return n * mult;
 }
 

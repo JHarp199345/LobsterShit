@@ -1,3 +1,4 @@
+import { asString } from "../../shared/validation.js";
 import type { ChannelAccountSnapshot, ChannelStatusIssue } from "openclaw/plugin-sdk";
 
 type ZalouserAccountStatus = {
@@ -10,9 +11,6 @@ type ZalouserAccountStatus = {
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value && typeof value === "object");
-
-const asString = (value: unknown): string | undefined =>
-  typeof value === "string" ? value : typeof value === "number" ? String(value) : undefined;
 
 function readZalouserAccountStatus(value: ChannelAccountSnapshot): ZalouserAccountStatus | null {
   if (!isRecord(value)) {

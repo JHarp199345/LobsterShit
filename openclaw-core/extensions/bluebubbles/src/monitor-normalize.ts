@@ -81,14 +81,17 @@ function buildAttachmentPlaceholder(attachments: BlueBubblesAttachment[]): strin
   const allImages = mimeTypes.every((entry) => entry.startsWith("image/"));
   const allVideos = mimeTypes.every((entry) => entry.startsWith("video/"));
   const allAudio = mimeTypes.every((entry) => entry.startsWith("audio/"));
-  const tag = allImages
-    ? "<media:image>"
-    : allVideos
-      ? "<media:video>"
-      : allAudio
-        ? "<media:audio>"
-        : "<media:attachment>";
-  const label = allImages ? "image" : allVideos ? "video" : allAudio ? "audio" : "file";
+  let tag: string;
+  if (allImages) tag = "<media:image>";
+  else if (allVideos) tag = "<media:video>";
+  else if (allAudio) tag = "<media:audio>";
+  else tag = "<media:attachment>";
+
+  let label: string;
+  if (allImages) label = "image";
+  else if (allVideos) label = "video";
+  else if (allAudio) label = "audio";
+  else label = "file";
   const suffix = attachments.length === 1 ? label : `${label}s`;
   return `${tag} (${attachments.length} ${suffix})`;
 }
@@ -174,7 +177,7 @@ function extractReplyMetadata(message: Record<string, unknown>): {
   const isReactionAssociation =
     typeof associatedType === "number" && REACTION_TYPE_MAP.has(associatedType);
 
-  const replyToId = directReplyId ?? (!isReactionAssociation ? associatedGuid : undefined);
+  const replyToId = directReplyId ?? (isReactionAssociation ? undefined : associatedGuid);
   const threadOriginatorGuid = readString(message, "threadOriginatorGuid");
   const messageGuid = readString(message, "guid");
   const fallbackReplyId =
@@ -271,13 +274,11 @@ function extractChatContext(message: Record<string, unknown>): {
   const chatParticipants = chat ? chat["participants"] : undefined;
   const messageParticipants = message["participants"];
   const chatsParticipants = chatFromList ? chatFromList["participants"] : undefined;
-  const participants = Array.isArray(chatParticipants)
-    ? chatParticipants
-    : Array.isArray(messageParticipants)
-      ? messageParticipants
-      : Array.isArray(chatsParticipants)
-        ? chatsParticipants
-        : [];
+  let participants: unknown[];
+  if (Array.isArray(chatParticipants)) participants = chatParticipants;
+  else if (Array.isArray(messageParticipants)) participants = messageParticipants;
+  else if (Array.isArray(chatsParticipants)) participants = chatsParticipants;
+  else participants = [];
   const participantsCount = participants.length;
   const groupFromChatGuid = resolveGroupFlagFromChatGuid(chatGuid);
   const explicitIsGroup =
@@ -717,16 +718,18 @@ export function normalizeWebhookMessage(
     readNumber(message, "date") ??
     readNumber(message, "dateCreated") ??
     readNumber(message, "timestamp");
-  const timestamp =
-    typeof timestampRaw === "number"
-      ? timestampRaw > 1_000_000_000_000
-        ? timestampRaw
-        : timestampRaw * 1000
-      : undefined;
+  let timestamp: number | undefined;
+  if (typeof timestampRaw !== "number") {
+    timestamp = undefined;
+  } else if (timestampRaw > 1_000_000_000_000) {
+    timestamp = timestampRaw;
+  } else {
+    timestamp = timestampRaw * 1000;
+  }
 
   // BlueBubbles may omit `handle` in webhook payloads; for DM chat GUIDs we can still infer sender.
   const senderFallbackFromChatGuid =
-    !senderId && !isGroup && chatGuid ? extractHandleFromChatGuid(chatGuid) : null;
+    senderId || isGroup || !chatGuid ? null : extractHandleFromChatGuid(chatGuid);
   const normalizedSender = normalizeBlueBubblesHandle(senderId || senderFallbackFromChatGuid || "");
   if (!normalizedSender) {
     return null;
@@ -794,15 +797,17 @@ export function normalizeWebhookReaction(
     readNumberLike(message, "date") ??
     readNumberLike(message, "dateCreated") ??
     readNumberLike(message, "timestamp");
-  const timestamp =
-    typeof timestampRaw === "number"
-      ? timestampRaw > 1_000_000_000_000
-        ? timestampRaw
-        : timestampRaw * 1000
-      : undefined;
+  let timestamp: number | undefined;
+  if (typeof timestampRaw !== "number") {
+    timestamp = undefined;
+  } else if (timestampRaw > 1_000_000_000_000) {
+    timestamp = timestampRaw;
+  } else {
+    timestamp = timestampRaw * 1000;
+  }
 
   const senderFallbackFromChatGuid =
-    !senderId && !isGroup && chatGuid ? extractHandleFromChatGuid(chatGuid) : null;
+    senderId || isGroup || !chatGuid ? null : extractHandleFromChatGuid(chatGuid);
   const normalizedSender = normalizeBlueBubblesHandle(senderId || senderFallbackFromChatGuid || "");
   if (!normalizedSender) {
     return null;

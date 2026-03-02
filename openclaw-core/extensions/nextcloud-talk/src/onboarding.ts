@@ -1,3 +1,4 @@
+import { validateRequired } from "../../shared/validation.js";
 import {
   addWildcardAllowFrom,
   formatDocsLink,
@@ -21,7 +22,7 @@ const channel = "nextcloud-talk" as const;
 
 function setNextcloudTalkDmPolicy(cfg: CoreConfig, dmPolicy: DmPolicy): CoreConfig {
   const existingConfig = cfg.channels?.["nextcloud-talk"];
-  const existingAllowFrom: string[] = (existingConfig?.allowFrom ?? []).map((x) => String(x));
+  const existingAllowFrom: string[] = (existingConfig?.allowFrom ?? []).map(String);
   const allowFrom: string[] =
     dmPolicy === "open" ? (addWildcardAllowFrom(existingAllowFrom) as string[]) : existingAllowFrom;
 
@@ -88,7 +89,7 @@ async function promptNextcloudTalkAllowFrom(params: {
       message: "Nextcloud Talk allowFrom (user id)",
       placeholder: "username",
       initialValue: existingAllowFrom[0] ? String(existingAllowFrom[0]) : undefined,
-      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+      validate: validateRequired,
     });
     resolvedIds = parseInput(String(entry));
     if (resolvedIds.length === 0) {
@@ -264,7 +265,7 @@ export const nextcloudTalkOnboardingAdapter: ChannelOnboardingAdapter = {
         secret = String(
           await prompter.text({
             message: "Enter Nextcloud Talk bot secret",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            validate: validateRequired,
           }),
         ).trim();
       }
@@ -277,7 +278,7 @@ export const nextcloudTalkOnboardingAdapter: ChannelOnboardingAdapter = {
         secret = String(
           await prompter.text({
             message: "Enter Nextcloud Talk bot secret",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            validate: validateRequired,
           }),
         ).trim();
       }
@@ -285,7 +286,7 @@ export const nextcloudTalkOnboardingAdapter: ChannelOnboardingAdapter = {
       secret = String(
         await prompter.text({
           message: "Enter Nextcloud Talk bot secret",
-          validate: (value) => (value?.trim() ? undefined : "Required"),
+          validate: validateRequired,
         }),
       ).trim();
     }

@@ -35,6 +35,7 @@ TURBO_MODELS="${TURBO_MODELS:-qwen3:8b qwen3-vl:8b qwen2.5:8b}"
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --queue) QUEUE_FILE="$2"; shift ;;
+        --batch) : ;;  # Primary mode (default)
         --dry-run) DRY_RUN=1 ;;
         --limit) LIMIT="$2"; shift ;;
         --silent) SILENT=1 ;;
@@ -101,7 +102,17 @@ done
 
 # Sanitize input: strip control chars and normalize so request JSON stays valid
 EMAIL_DATA=$(echo -n "$EMAIL_DATA" | tr -d '\000-\037')
-SYSTEM_PROMPT=$(cat "$LIBRARY_DIR/harper_base.txt" "$LIBRARY_DIR/email_cleaner.txt" | tr -d '\000-\037')
+# Use intent router + block loader when available (Stage 2)
+ROUTER="$WORKSPACE/scripts/harper_intent_router.sh"
+LOAD_BLOCK="$WORKSPACE/scripts/harper_load_block.sh"
+BLOCK_ID="email_cleaner"
+[ -x "$ROUTER" ] && BLOCK_ID=$("$ROUTER" "email inbox clean triage")
+if [ -x "$LOAD_BLOCK" ]; then
+    SYSTEM_PROMPT=$("$LOAD_BLOCK" harper_base)$'\n'$("$LOAD_BLOCK" "$BLOCK_ID")
+else
+    SYSTEM_PROMPT=$(cat "$LIBRARY_DIR/harper_base.txt" "$LIBRARY_DIR/email_cleaner.txt" 2>/dev/null | tr -d '\000-\037')
+fi
+[ -z "$SYSTEM_PROMPT" ] && SYSTEM_PROMPT="You are a JSON formatter. Output: {\"decisions\":[{\"id\":\"ID\",\"action\":\"archive|label|delete|skip\",\"label\":\"...\"}]}."
 
 if [ "$WORKER_MODE" -eq 1 ]; then
     # STRICT WORKER MODE: Minimalist prompt to prevent hallucinations and JSON breaks
@@ -144,45 +155,38 @@ call_ollama() {
     curl -s -X POST http://localhost:11434/api/chat -d "$json_payload"
 }
 
-# --- SECTION B4: JSON RECOVERY & RETRY ---
+# --- SECTION B4: JSON RECOVERY (5-Step Plan) ---
+# Plan: 1) Parse 2) Strip markdown 3) Regex extract 4) Retry Ollama 5) Exit non-zero
 parse_and_validate_json() {
     local raw="$1"
     
-    # Check if raw response is empty
     if [ -z "$raw" ]; then
         echo ""
         return
     fi
 
-    # Step 1: Basic JSON parse with jq - prefer content, fallback to thinking (qwen3 puts output there when think mode is on)
-    local content=$(echo "$raw" | jq -r '.message.content' 2>/dev/null)
-    if [ -z "$content" ] || [ "$content" == "null" ]; then
-        content=$(echo "$raw" | jq -r '.message.thinking // empty' 2>/dev/null)
-    fi
-
-    # Step 2: If both empty, write to debug file for post-mortem.
+    # Step 1: Extract content from Ollama wrapper (content or thinking)
+    local content=$(echo "$raw" | jq -r '.message.content // .message.thinking // empty' 2>/dev/null)
     if [ -z "$content" ] || [ "$content" == "null" ]; then
         echo "$raw" > "$DEBUG_RESPONSE_FILE" 2>/dev/null || true
-        harper_log DEBUG turbo "Ollama wrapper parse failed" "raw_len=${#raw}" 2>/dev/null || echo "[DEBUG] RAW AI RESPONSE (WRAPPER FAIL)" >> "$DIAG_LOG"
-        # Try a last-ditch sed extraction if jq failed on the whole wrapper
         content=$(echo "$raw" | sed -n 's/.*"content": "\(.*\)".*/\1/p' | sed 's/\\n//g' | sed 's/\\"/"/g')
         [ -z "$content" ] && content=$(echo "$raw" | sed -n 's/.*"thinking": "\(.*\)".*/\1/p' | sed 's/\\n/\n/g' | sed 's/\\"/"/g')
     fi
-    
-    # SLEDGEHAMMER: Extract everything between the first { and the last }
-    # This handles Markdown wrappers or "chatty" AI text before/after JSON
-    # USER-REQUESTED PATTERN:
-    content=$(echo "$content" | sed -n '/{/,/}/p' | head -n 100)
-    
-    # Step 3: Strip whitespace
-    content=$(echo "$content" | xargs echo 2>/dev/null)
-    
-    # Step 4: Validate with jq
+
+    # Step 2: Strip markdown fences (```json ... ``` or ``` ... ```)
+    if echo "$content" | grep -q '```'; then
+        content=$(echo "$content" | sed -n '/```/,/```/p' | sed '/^```/d' | tr -d '\000-\037')
+    fi
+
+    # Step 3: Regex extract {"decisions":[...]} — range from first { to last }
+    if ! echo "$content" | jq -e '.decisions' >/dev/null 2>&1; then
+        content=$(echo "$content" | sed -n '/{/,/}/p' | head -n 100)
+    fi
+
+    # Step 4: Validate
     if ! echo "$content" | jq -e . >/dev/null 2>&1; then
         echo "$content" > "$DEBUG_CONTENT_FILE" 2>/dev/null || true
-        harper_log DEBUG turbo "JSON content parse failed" "content_len=${#content}" 2>/dev/null || true
-        # Last ditch regex if sed range missed something
-        content=$(echo "$content" | grep -o '[{].*[}]' | head -1)
+        content=$(echo "$content" | grep -oE '\{[^{}]*\}' | head -1)
     fi
     echo "$content"
 }

@@ -29,10 +29,10 @@ import {
 import { getIrcRuntime } from "./runtime.js";
 import { sendMessageIrc } from "./send.js";
 import type { CoreConfig, IrcInboundMessage } from "./types.js";
+import { escapeForRegex } from "../../shared/regex.js";
 
 const CHANNEL_ID = "irc" as const;
-
-const escapeIrcRegexLiteral = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const escapeIrcRegexLiteral = escapeForRegex;
 
 function resolveIrcEffectiveAllowlists(params: {
   configAllowFrom: string[];

@@ -142,18 +142,21 @@ export const bluebubblesMessageActions: ChannelMessageActionAdapter = {
       // Fall back to session context if no explicit target provided
       const contextTarget = toolContext?.currentChannelId?.trim();
 
-      const target = chatIdentifier?.trim()
-        ? ({
-            kind: "chat_identifier",
-            chatIdentifier: chatIdentifier.trim(),
-          } as BlueBubblesSendTarget)
-        : typeof chatId === "number"
-          ? ({ kind: "chat_id", chatId } as BlueBubblesSendTarget)
-          : to
-            ? mapTarget(to)
-            : contextTarget
-              ? mapTarget(contextTarget)
-              : null;
+      let target: BlueBubblesSendTarget | null;
+      if (chatIdentifier?.trim()) {
+        target = {
+          kind: "chat_identifier",
+          chatIdentifier: chatIdentifier.trim(),
+        } as BlueBubblesSendTarget;
+      } else if (typeof chatId === "number") {
+        target = { kind: "chat_id", chatId } as BlueBubblesSendTarget;
+      } else if (to) {
+        target = mapTarget(to);
+      } else if (contextTarget) {
+        target = mapTarget(contextTarget);
+      } else {
+        target = null;
+      }
 
       if (!target) {
         throw new Error(`BlueBubbles ${action} requires chatGuid, chatIdentifier, chatId, or to.`);

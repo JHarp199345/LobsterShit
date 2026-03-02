@@ -1,3 +1,4 @@
+import { truncateTo } from "../../shared/preview-text.js";
 import type { LineChannelData, OpenClawPluginApi, ReplyPayload } from "openclaw/plugin-sdk";
 import {
   createActionCard,
@@ -58,22 +59,22 @@ function parseActions(actionsStr: string | undefined): CardAction[] {
     if (actionData.startsWith("http://") || actionData.startsWith("https://")) {
       results.push({
         label,
-        action: { type: "uri", label: label.slice(0, 20), uri: actionData },
+        action: { type: "uri", label: truncateTo(label, 20), uri: actionData },
       });
     } else if (actionData.includes("=")) {
       results.push({
         label,
         action: {
           type: "postback",
-          label: label.slice(0, 20),
-          data: actionData.slice(0, 300),
+          label: truncateTo(label, 20),
+          data: truncateTo(actionData, 300),
           displayText: label,
         },
       });
     } else {
       results.push({
         label,
-        action: { type: "message", label: label.slice(0, 20), text: actionData },
+        action: { type: "message", label: truncateTo(label, 20), text: actionData },
       });
     }
   }
@@ -186,7 +187,7 @@ export function registerLineCardCommand(api: OpenClawPluginApi): void {
             const bubble = createInfoCard(title, body, footer);
             return buildLineReply({
               flexMessage: {
-                altText: `${title}: ${body}`.slice(0, 400),
+                altText: truncateTo(`${title}: ${body}`, 400),
                 contents: bubble,
               },
             });
@@ -201,7 +202,7 @@ export function registerLineCardCommand(api: OpenClawPluginApi): void {
             const bubble = createImageCard(imageUrl, title, caption);
             return buildLineReply({
               flexMessage: {
-                altText: `${title}: ${caption}`.slice(0, 400),
+                altText: truncateTo(`${title}: ${caption}`, 400),
                 contents: bubble,
               },
             });
@@ -218,7 +219,7 @@ export function registerLineCardCommand(api: OpenClawPluginApi): void {
             });
             return buildLineReply({
               flexMessage: {
-                altText: `${title}: ${body}`.slice(0, 400),
+                altText: truncateTo(`${title}: ${body}`, 400),
                 contents: bubble,
               },
             });
@@ -235,7 +236,7 @@ export function registerLineCardCommand(api: OpenClawPluginApi): void {
             const bubble = createListCard(title, items);
             return buildLineReply({
               flexMessage: {
-                altText: `${title}: ${items.map((i) => i.title).join(", ")}`.slice(0, 400),
+                altText: truncateTo(`${title}: ${items.map((i) => i.title).join(", ")}`, 400),
                 contents: bubble,
               },
             });

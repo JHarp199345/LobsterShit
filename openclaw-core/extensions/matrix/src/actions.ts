@@ -157,10 +157,13 @@ export const matrixMessageActions: ChannelMessageActionAdapter = {
         action === "list-pins"
           ? undefined
           : readStringParam(params, "messageId", { required: true });
+      let pinAction: "pinMessage" | "unpinMessage" | "listPins";
+      if (action === "pin") pinAction = "pinMessage";
+      else if (action === "unpin") pinAction = "unpinMessage";
+      else pinAction = "listPins";
       return await handleMatrixAction(
         {
-          action:
-            action === "pin" ? "pinMessage" : action === "unpin" ? "unpinMessage" : "listPins",
+          action: pinAction,
           roomId: resolveRoomId(),
           messageId,
         },

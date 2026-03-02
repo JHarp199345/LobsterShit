@@ -1,3 +1,4 @@
+import { validateRequired } from "../../shared/validation.js";
 import type {
   ChannelOnboardingAdapter,
   ChannelOnboardingDmPolicy,
@@ -72,19 +73,19 @@ async function promptMSTeamsCredentials(prompter: WizardPrompter): Promise<{
   const appId = String(
     await prompter.text({
       message: "Enter MS Teams App ID",
-      validate: (value) => (value?.trim() ? undefined : "Required"),
+      validate: validateRequired,
     }),
   ).trim();
   const appPassword = String(
     await prompter.text({
       message: "Enter MS Teams App Password",
-      validate: (value) => (value?.trim() ? undefined : "Required"),
+      validate: validateRequired,
     }),
   ).trim();
   const tenantId = String(
     await prompter.text({
       message: "Enter MS Teams Tenant ID",
-      validate: (value) => (value?.trim() ? undefined : "Required"),
+      validate: validateRequired,
     }),
   ).trim();
   return { appId, appPassword, tenantId };
@@ -112,7 +113,7 @@ async function promptMSTeamsAllowFrom(params: {
       message: "MS Teams allowFrom (usernames or ids)",
       placeholder: "alex@example.com, Alex Johnson",
       initialValue: existing[0] ? String(existing[0]) : undefined,
-      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+      validate: validateRequired,
     });
     const parts = parseAllowFromInput(String(entry));
     if (parts.length === 0) {

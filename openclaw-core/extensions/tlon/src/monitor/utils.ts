@@ -1,3 +1,4 @@
+import { escapeForRegex } from "../../shared/regex.js";
 import { normalizeShip } from "../targets.js";
 
 export function formatModelName(modelString?: string | null): string {
@@ -21,7 +22,7 @@ export function formatModelName(modelString?: string | null): string {
     return modelMappings[modelName];
   }
   return modelName
-    .replace(/-/g, " ")
+    .replaceAll(/-/g, " ")
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
@@ -32,7 +33,7 @@ export function isBotMentioned(messageText: string, botShipName: string): boolea
     return false;
   }
   const normalizedBotShip = normalizeShip(botShipName);
-  const escapedShip = normalizedBotShip.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const escapedShip = escapeForRegex(normalizedBotShip);
   const mentionPattern = new RegExp(`(^|\\s)${escapedShip}(?=\\s|$)`, "i");
   return mentionPattern.test(messageText);
 }

@@ -1,6 +1,8 @@
 import type { MSTeamsConfig } from "openclaw/plugin-sdk";
 import { describe, expect, it, vi } from "vitest";
 
+const MOCK_APP_PW = process.env.TEST_MSTEAMS_APP_PW ?? "x";
+
 const hostMockState = vi.hoisted(() => ({
   tokenError: null as Error | null,
 }));
@@ -32,7 +34,7 @@ describe("msteams probe", () => {
     const cfg = {
       enabled: true,
       appId: "app",
-      appPassword: "pw",
+      appPassword: MOCK_APP_PW,
       tenantId: "tenant",
     } as unknown as MSTeamsConfig;
     await expect(probeMSTeams(cfg)).resolves.toMatchObject({
@@ -46,7 +48,7 @@ describe("msteams probe", () => {
     const cfg = {
       enabled: true,
       appId: "app",
-      appPassword: "pw",
+      appPassword: MOCK_APP_PW,
       tenantId: "tenant",
     } as unknown as MSTeamsConfig;
     await expect(probeMSTeams(cfg)).resolves.toMatchObject({

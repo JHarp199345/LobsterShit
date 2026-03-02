@@ -52,14 +52,14 @@ export function formatNextcloudTalkInlineCode(code: string): string {
  */
 export function stripNextcloudTalkFormatting(text: string): string {
   return text
-    .replace(/```[\s\S]*?```/g, "")
-    .replace(/`[^`]+`/g, "")
+    .replaceAll(/```[\s\S]*?```/g, "")
+    .replaceAll(/`[^`]+`/g, "")
     .replace(/\*\*([^*]+)\*\*/g, "$1")
     .replace(/\*([^*]+)\*/g, "$1")
     .replace(/_([^_]+)_/g, "$1")
     .replace(/~~([^~]+)~~/g, "$1")
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-    .replace(/\s+/g, " ")
+    .replaceAll(/\s+/g, " ")
     .trim();
 }
 

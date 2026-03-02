@@ -1,3 +1,4 @@
+import { validateRequired } from "../../shared/validation.js";
 import type { OpenClawConfig, DmPolicy } from "openclaw/plugin-sdk";
 import {
   addWildcardAllowFrom,
@@ -59,7 +60,7 @@ async function promptAllowFrom(params: {
     message: "Google Chat allowFrom (users/<id> or raw email; avoid users/<email>)",
     placeholder: "users/123456789, name@example.com",
     initialValue: current[0] ? String(current[0]) : undefined,
-    validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+    validate: validateRequired,
   });
   const parts = parseAllowFromInput(String(entry));
   const unique = mergeAllowFromEntries(undefined, parts);
@@ -161,7 +162,7 @@ async function promptCredentials(params: {
     const path = await prompter.text({
       message: "Service account JSON path",
       placeholder: "/path/to/service-account.json",
-      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+      validate: validateRequired,
     });
     return applyAccountConfig({
       cfg,
@@ -173,7 +174,7 @@ async function promptCredentials(params: {
   const json = await prompter.text({
     message: "Service account JSON (single line)",
     placeholder: '{"type":"service_account", ... }',
-    validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+    validate: validateRequired,
   });
   return applyAccountConfig({
     cfg,
@@ -205,7 +206,7 @@ async function promptAudience(params: {
     message: audienceType === "project-number" ? "Project number" : "App URL",
     placeholder: audienceType === "project-number" ? "1234567890" : "https://your.host/googlechat",
     initialValue: currentAudience || undefined,
-    validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+    validate: validateRequired,
   });
   return applyAccountConfig({
     cfg: params.cfg,

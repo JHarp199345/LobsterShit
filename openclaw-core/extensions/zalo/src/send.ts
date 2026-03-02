@@ -1,4 +1,5 @@
 import type { OpenClawConfig } from "openclaw/plugin-sdk";
+import { truncateTo } from "../../shared/preview-text.js";
 import { resolveZaloAccount } from "./accounts.js";
 import type { ZaloFetch } from "./api.js";
 import { sendMessage, sendPhoto } from "./api.js";
@@ -68,7 +69,7 @@ export async function sendMessageZalo(
       token,
       {
         chat_id: chatId.trim(),
-        text: text.slice(0, 2000),
+        text: truncateTo(text, 2000),
       },
       fetcher,
     );
@@ -108,7 +109,7 @@ export async function sendPhotoZalo(
       {
         chat_id: chatId.trim(),
         photo: photoUrl.trim(),
-        caption: options.caption?.slice(0, 2000),
+        caption: options.caption ? truncateTo(options.caption, 2000) : undefined,
       },
       fetcher,
     );

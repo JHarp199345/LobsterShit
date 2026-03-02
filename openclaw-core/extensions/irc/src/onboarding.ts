@@ -1,3 +1,4 @@
+import { validateRequired } from "../../shared/validation.js";
 import {
   addWildcardAllowFrom,
   DEFAULT_ACCOUNT_ID,
@@ -183,7 +184,7 @@ async function promptIrcAllowFrom(params: {
     message: "IRC allowFrom (nick or nick!user@host)",
     placeholder: "alice, bob!ident@example.org",
     initialValue: existing[0] ? String(existing[0]) : undefined,
-    validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+    validate: validateRequired,
   });
 
   const parsed = parseListInput(String(raw));
@@ -218,7 +219,7 @@ async function promptIrcNickServConfig(params: {
     await params.prompter.text({
       message: "NickServ service nick",
       initialValue: existing?.service || "NickServ",
-      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+      validate: validateRequired,
     }),
   ).trim();
 
@@ -261,7 +262,7 @@ async function promptIrcNickServConfig(params: {
             (params.accountId === DEFAULT_ACCOUNT_ID
               ? process.env.IRC_NICKSERV_REGISTER_EMAIL
               : undefined),
-          validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+          validate: validateRequired,
         }),
       ).trim()
     : undefined;
@@ -347,7 +348,7 @@ export const ircOnboardingAdapter: ChannelOnboardingAdapter = {
         await prompter.text({
           message: "IRC server host",
           initialValue: resolved.config.host || envHost || undefined,
-          validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+          validate: validateRequired,
         }),
       ).trim();
 
@@ -372,7 +373,7 @@ export const ircOnboardingAdapter: ChannelOnboardingAdapter = {
         await prompter.text({
           message: "IRC nick",
           initialValue: resolved.config.nick || envNick || undefined,
-          validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+          validate: validateRequired,
         }),
       ).trim();
 
@@ -380,7 +381,7 @@ export const ircOnboardingAdapter: ChannelOnboardingAdapter = {
         await prompter.text({
           message: "IRC username",
           initialValue: resolved.config.username || nick || "openclaw",
-          validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+          validate: validateRequired,
         }),
       ).trim();
 
@@ -388,7 +389,7 @@ export const ircOnboardingAdapter: ChannelOnboardingAdapter = {
         await prompter.text({
           message: "IRC real name",
           initialValue: resolved.config.realname || "OpenClaw",
-          validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+          validate: validateRequired,
         }),
       ).trim();
 

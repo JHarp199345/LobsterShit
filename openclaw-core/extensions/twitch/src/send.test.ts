@@ -31,7 +31,7 @@ vi.mock("./utils/twitch.js", () => ({
 }));
 
 vi.mock("./utils/markdown.js", () => ({
-  stripMarkdownForTwitch: vi.fn((text: string) => text.replace(/\*\*/g, "")),
+  stripMarkdownForTwitch: vi.fn((text: string) => text.replaceAll(/\*\*/g, "")),
 }));
 
 vi.mock("./client-manager-registry.js", () => ({
@@ -94,7 +94,7 @@ describe("send", () => {
           messageId: "twitch-msg-456",
         }),
       } as unknown as ReturnType<typeof getClientManager>);
-      vi.mocked(stripMarkdownForTwitch).mockImplementation((text) => text.replace(/\*\*/g, ""));
+      vi.mocked(stripMarkdownForTwitch).mockImplementation((text) => text.replaceAll(/\*\*/g, ""));
 
       await sendMessageTwitchInternal(
         "#testchannel",

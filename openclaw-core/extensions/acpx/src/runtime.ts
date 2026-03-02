@@ -341,10 +341,8 @@ export class AcpxRuntime implements AcpRuntime {
   async setMode(input: { handle: AcpRuntimeHandle; mode: string }): Promise<void> {
     const state = this.resolveHandleState(input.handle);
     const mode = asTrimmedString(input.mode);
-    if (!mode) {
-      throw new AcpRuntimeError("ACP_TURN_FAILED", "ACP runtime mode is required.");
-    }
-    await this.runControlCommand({
+    if (mode) {
+      await this.runControlCommand({
       args: this.buildControlArgs({
         cwd: state.cwd,
         command: [state.agent, "set-mode", mode, "--session", state.name],
@@ -352,6 +350,9 @@ export class AcpxRuntime implements AcpRuntime {
       cwd: state.cwd,
       fallbackCode: "ACP_TURN_FAILED",
     });
+    } else {
+      throw new AcpRuntimeError("ACP_TURN_FAILED", "ACP runtime mode is required.");
+    }
   }
 
   async setConfigOption(input: {

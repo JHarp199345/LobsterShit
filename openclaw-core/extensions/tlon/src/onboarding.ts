@@ -1,3 +1,4 @@
+import { validateRequired } from "../../shared/validation.js";
 import type { OpenClawConfig } from "openclaw/plugin-sdk";
 import {
   formatDocsLink,
@@ -135,7 +136,7 @@ export const tlonOnboardingAdapter: ChannelOnboardingAdapter = {
       message: "Ship name",
       placeholder: "~sampel-palnet",
       initialValue: resolved.ship ?? undefined,
-      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+      validate: validateRequired,
     });
 
     const url = await prompter.text({
@@ -172,7 +173,7 @@ export const tlonOnboardingAdapter: ChannelOnboardingAdapter = {
       message: "Login code",
       placeholder: "lidlut-tabwed-pillex-ridrup",
       initialValue: resolved.code ?? undefined,
-      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+      validate: validateRequired,
     });
 
     const wantsGroupChannels = await prompter.confirm({

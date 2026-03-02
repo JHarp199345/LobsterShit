@@ -19,7 +19,7 @@ export type ParsedIrcPrefix = {
 };
 
 export function parseIrcLine(line: string): ParsedIrcLine | null {
-  const raw = line.replace(/[\r\n]+/g, "").trim();
+  const raw = line.replaceAll(/[\r\n]+/g, "").trim();
   if (!raw) {
     return null;
   }
@@ -109,17 +109,17 @@ function decodeLiteralEscapes(input: string): string {
   // Defensive: this is not a full JS string unescaper.
   // It's just enough to catch common "\r\n" / "\u0001" style payloads.
   return input
-    .replace(/\\r/g, "\r")
-    .replace(/\\n/g, "\n")
-    .replace(/\\t/g, "\t")
-    .replace(/\\0/g, "\0")
-    .replace(/\\x([0-9a-fA-F]{2})/g, (_, hex) => String.fromCharCode(Number.parseInt(hex, 16)))
-    .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(Number.parseInt(hex, 16)));
+    .replaceAll(/\\r/g, "\r")
+    .replaceAll(/\\n/g, "\n")
+    .replaceAll(/\\t/g, "\t")
+    .replaceAll(/\\0/g, "\0")
+    .replaceAll(/\\x([0-9a-fA-F]{2})/g, (_, hex) => String.fromCharCode(Number.parseInt(hex, 16)))
+    .replaceAll(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(Number.parseInt(hex, 16)));
 }
 
 export function sanitizeIrcOutboundText(text: string): string {
   const decoded = decodeLiteralEscapes(text);
-  return stripIrcControlChars(decoded.replace(/\r?\n/g, " ")).trim();
+  return stripIrcControlChars(decoded.replaceAll(/\r?\n/g, " ")).trim();
 }
 
 export function sanitizeIrcTarget(raw: string): string {

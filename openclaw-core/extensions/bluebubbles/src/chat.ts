@@ -294,12 +294,12 @@ export async function setGroupIconBlueBubbles(
   });
 
   // Build multipart form-data
-  const boundary = `----BlueBubblesFormBoundary${crypto.randomUUID().replace(/-/g, "")}`;
+  const boundary = `----BlueBubblesFormBoundary${crypto.randomUUID().replaceAll(/-/g, "")}`;
   const parts: Uint8Array[] = [];
   const encoder = new TextEncoder();
 
   // Sanitize filename to prevent multipart header injection (CWE-93)
-  const safeFilename = path.basename(filename).replace(/[\r\n"\\]/g, "_") || "icon.png";
+  const safeFilename = path.basename(filename).replaceAll(/[\r\n"\\]/g, "_") || "icon.png";
 
   // Add file field named "icon" as per API spec
   parts.push(encoder.encode(`--${boundary}\r\n`));

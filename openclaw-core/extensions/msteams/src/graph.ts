@@ -28,7 +28,7 @@ export function normalizeQuery(value?: string | null): string {
 }
 
 export function escapeOData(value: string): string {
-  return value.replace(/'/g, "''");
+  return value.replaceAll(/'/g, "''");
 }
 
 export async function fetchGraphJson<T>(params: {

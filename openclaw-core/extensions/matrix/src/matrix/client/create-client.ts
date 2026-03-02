@@ -105,7 +105,10 @@ export async function createMatrixClient(params: {
           safeLeft,
         );
       } catch (err) {
-        const message = typeof err === "string" ? err : err instanceof Error ? err.message : "";
+        let message: string;
+        if (typeof err === "string") message = err;
+        else if (err instanceof Error) message = err.message;
+        else message = "";
         if (message.includes("Expect value to be String")) {
           LogService.warn(
             "MatrixClientLite",

@@ -53,13 +53,13 @@ function truncateSummary(text: string, max = 50): string {
   if (!text) {
     return "";
   }
-  const clean = text.replace(/\n/g, " ").trim();
+  const clean = text.replaceAll(/\n/g, " ").trim();
   return clean.length <= max ? clean : clean.slice(0, max - 3) + "...";
 }
 
 /** Streaming card session manager */
 export class FeishuStreamingSession {
-  private client: Client;
+  private readonly client: Client;
   private creds: Credentials;
   private state: CardState | null = null;
   private queue: Promise<void> = Promise.resolve();

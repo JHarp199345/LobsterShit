@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { sanitizeForIdentifier } from "../../shared/identifiers.js";
 import { getNostrRuntime } from "./runtime.js";
 
 const STORE_VERSION = 2;
@@ -37,11 +38,7 @@ export type NostrProfileState = {
 };
 
 function normalizeAccountId(accountId?: string): string {
-  const trimmed = accountId?.trim();
-  if (!trimmed) {
-    return "default";
-  }
-  return trimmed.replace(/[^a-z0-9._-]+/gi, "_");
+  return sanitizeForIdentifier(accountId, { replaceChar: "_", default: "default" });
 }
 
 function resolveNostrStatePath(accountId?: string, env: NodeJS.ProcessEnv = process.env): string {

@@ -8,6 +8,7 @@
 
 import { randomUUID } from "node:crypto";
 import type * as LanceDB from "@lancedb/lancedb";
+import { truncateTo } from "../shared/preview-text.js";
 import { Type } from "@sinclair/typebox";
 import OpenAI from "openai";
 import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
@@ -213,7 +214,7 @@ const PROMPT_ESCAPE_MAP: Record<string, string> = {
 };
 
 export function looksLikePromptInjection(text: string): boolean {
-  const normalized = text.replace(/\s+/g, " ").trim();
+  const normalized = text.replaceAll(/\s+/g, " ").trim();
   if (!normalized) {
     return false;
   }
@@ -221,7 +222,7 @@ export function looksLikePromptInjection(text: string): boolean {
 }
 
 export function escapeMemoryForPrompt(text: string): string {
-  return text.replace(/[&<>"']/g, (char) => PROMPT_ESCAPE_MAP[char] ?? char);
+  return text.replaceAll(/[&<>"']/g, (char) => PROMPT_ESCAPE_MAP[char] ?? char);
 }
 
 export function formatRelevantMemoriesContext(
@@ -406,7 +407,7 @@ const memoryPlugin = {
           });
 
           return {
-            content: [{ type: "text", text: `Stored: "${text.slice(0, 100)}..."` }],
+            content: [{ type: "text", text: `Stored: "${truncateTo(text, 100, { ellipsis: "..." })}"` }],
             details: { action: "created", id: entry.id },
           };
         },
@@ -454,7 +455,7 @@ const memoryPlugin = {
             }
 
             const list = results
-              .map((r) => `- [${r.entry.id.slice(0, 8)}] ${r.entry.text.slice(0, 60)}...`)
+              .map((r) => `- [${r.entry.id.slice(0, 8)}] ${truncateTo(r.entry.text, 60, { ellipsis: "..." })}`)
               .join("\n");
 
             // Strip vector data for serialization

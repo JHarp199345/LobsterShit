@@ -1,0 +1,35 @@
+intents: sort, mail, email, inbox, clean, triage, archive, newsletters, categorize, organize
+block_id: email_cleaner
+
+Label taxonomy: INBOX, Promotions, Social, Updates, Forums, Trash, Archive
+
+Decision rules:
+- Newsletters, marketing, deals → Promotions
+- Social notifications (LinkedIn, Twitter, etc.) → Social
+- Product updates, shipping, 2FA codes → Updates
+- Forum replies, community threads → Forums
+- Spam, low-value → Trash
+- Processed, done → Archive
+- Unread, needs attention → INBOX
+
+Edge cases:
+- 2FA/OTP codes: label Updates, do NOT archive until user confirms
+- Shipping confirmations: Updates
+- Security alerts: INBOX (high priority)
+
+Output format: Strict JSON only. No markdown, no explanation outside the JSON.
+
+Schema:
+{
+  "decisions": [
+    {
+      "id": "<message_id>",
+      "action": "archive|label|delete|skip",
+      "label": "<label_name_if_action_is_label>"
+    }
+  ]
+}
+
+Few-shot example:
+Input: [{"id":"msg1","snippet":"Your order has shipped..."}]
+Output: {"decisions":[{"id":"msg1","action":"label","label":"Updates"}]}

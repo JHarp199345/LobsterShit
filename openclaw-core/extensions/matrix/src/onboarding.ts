@@ -1,3 +1,4 @@
+import { validateRequired } from "../../shared/validation.js";
 import type { DmPolicy } from "openclaw/plugin-sdk";
 import {
   addWildcardAllowFrom,
@@ -70,7 +71,7 @@ async function promptMatrixAllowFrom(params: {
       message: "Matrix allowFrom (full @user:server; display name only if unique)",
       placeholder: "@user:server",
       initialValue: existingAllowFrom[0] ? String(existingAllowFrom[0]) : undefined,
-      validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
+      validate: validateRequired,
     });
     const parts = parseInput(String(entry));
     const resolvedIds: string[] = [];
@@ -294,7 +295,7 @@ export const matrixOnboardingAdapter: ChannelOnboardingAdapter = {
         accessToken = String(
           await prompter.text({
             message: "Matrix access token",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            validate: validateRequired,
           }),
         ).trim();
         // With access token, we can fetch the userId automatically - don't prompt for it
@@ -324,7 +325,7 @@ export const matrixOnboardingAdapter: ChannelOnboardingAdapter = {
         password = String(
           await prompter.text({
             message: "Matrix password",
-            validate: (value) => (value?.trim() ? undefined : "Required"),
+            validate: validateRequired,
           }),
         ).trim();
       }

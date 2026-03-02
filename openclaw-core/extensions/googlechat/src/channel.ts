@@ -61,12 +61,10 @@ export const googlechatDock: ChannelDock = {
   outbound: { textChunkLimit: 4000 },
   config: {
     resolveAllowFrom: ({ cfg, accountId }) =>
-      (resolveGoogleChatAccount({ cfg: cfg, accountId }).config.dm?.allowFrom ?? []).map((entry) =>
-        String(entry),
-      ),
+      (resolveGoogleChatAccount({ cfg: cfg, accountId }).config.dm?.allowFrom ?? []).map(String),
     formatAllowFrom: ({ allowFrom }) =>
       allowFrom
-        .map((entry) => String(entry))
+        .map(String)
         .filter(Boolean)
         .map(formatAllowFromEntry),
   },
@@ -174,10 +172,10 @@ export const googlechatPlugin: ChannelPlugin<ResolvedGoogleChatAccount> = {
           cfg: cfg,
           accountId,
         }).config.dm?.allowFrom ?? []
-      ).map((entry) => String(entry)),
+      ).map(String),
     formatAllowFrom: ({ allowFrom }) =>
       allowFrom
-        .map((entry) => String(entry))
+        .map(String)
         .filter(Boolean)
         .map(formatAllowFromEntry),
     resolveDefaultTo: ({ cfg, accountId }) =>

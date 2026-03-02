@@ -85,7 +85,7 @@ function warnDeprecatedUsersEmailEntries(
   }
   const key = deprecated
     .map((v) => v.toLowerCase())
-    .sort()
+    .sort((a, b) => a.localeCompare(b))
     .join(",");
   if (warnedDeprecatedUsersEmailAllowFrom.has(key)) {
     return;
@@ -142,8 +142,10 @@ export async function handleGoogleChatWebhookRequest(
     emptyObjectOnEmpty: false,
   });
   if (!body.ok) {
-    res.statusCode =
-      body.code === "PAYLOAD_TOO_LARGE" ? 413 : body.code === "REQUEST_BODY_TIMEOUT" ? 408 : 400;
+    let statusCode = 400;
+    if (body.code === "PAYLOAD_TOO_LARGE") statusCode = 413;
+    else if (body.code === "REQUEST_BODY_TIMEOUT") statusCode = 408;
+    res.statusCode = statusCode;
     res.end(
       body.code === "REQUEST_BODY_TIMEOUT"
         ? requestBodyErrorToText("REQUEST_BODY_TIMEOUT")
@@ -493,12 +495,12 @@ async function processMessageWithPipeline(params: {
       warnDeprecatedUsersEmailEntries(
         core,
         runtime,
-        groupUsers.map((v) => String(v)),
+        groupUsers.map(String),
       );
       const ok = isSenderAllowed(
         senderId,
         senderEmail,
-        groupUsers.map((v) => String(v)),
+        groupUsers.map(String),
         allowNameMatching,
       );
       if (!ok) {
@@ -509,7 +511,7 @@ async function processMessageWithPipeline(params: {
   }
 
   const dmPolicy = account.config.dm?.policy ?? "pairing";
-  const configAllowFrom = (account.config.dm?.allowFrom ?? []).map((v) => String(v));
+  const configAllowFrom = (account.config.dm?.allowFrom ?? []).map(String);
   const normalizedGroupUsers = groupUsers.map((v) => String(v));
   const senderGroupPolicy =
     groupPolicy === "disabled"
@@ -860,7 +862,7 @@ async function deliverGoogleChatReply(params: {
     }
     let first = true;
     for (const mediaUrl of mediaList) {
-      const caption = first && !suppressCaption ? payload.text : undefined;
+      const caption = suppressCaption || !first ? undefined : payload.text;
       first = false;
       try {
         const loaded = await core.channel.media.fetchRemoteMedia({
