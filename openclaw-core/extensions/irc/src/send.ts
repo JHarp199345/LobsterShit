@@ -6,6 +6,10 @@ import { normalizeIrcMessagingTarget } from "./normalize.js";
 import { makeIrcMessageId } from "./protocol.js";
 import { getIrcRuntime } from "./runtime.js";
 import type { CoreConfig } from "./types.js";
+import {
+  convertMarkdownForChannel,
+  recordOutboundActivity,
+} from "../../shared/send-helpers.js";
 
 type SendIrcOptions = {
   accountId?: string;
@@ -50,12 +54,11 @@ export async function sendMessageIrc(
   }
 
   const target = resolveTarget(to, opts);
-  const tableMode = runtime.channel.text.resolveMarkdownTableMode({
-    cfg,
-    channel: "irc",
-    accountId: account.accountId,
-  });
-  const prepared = runtime.channel.text.convertMarkdownTables(text.trim(), tableMode);
+  const prepared = convertMarkdownForChannel(
+    runtime,
+    { cfg, channel: "irc", accountId: account.accountId },
+    text.trim(),
+  );
   const payload = opts.replyTo ? `${prepared}\n\n[reply:${opts.replyTo}]` : prepared;
 
   if (!payload.trim()) {
@@ -75,11 +78,7 @@ export async function sendMessageIrc(
     transient.quit("sent");
   }
 
-  runtime.channel.activity.record({
-    channel: "irc",
-    accountId: account.accountId,
-    direction: "outbound",
-  });
+  recordOutboundActivity(runtime, { channel: "irc", accountId: account.accountId });
 
   return {
     messageId: makeIrcMessageId(),

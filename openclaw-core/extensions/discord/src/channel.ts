@@ -1,5 +1,6 @@
 import {
   applyAccountNameToChannelSection,
+  buildBaseAccountStatusSnapshot,
   buildChannelConfigSchema,
   buildTokenChannelStatusSummary,
   collectDiscordAuditChannelIds,
@@ -8,6 +9,7 @@ import {
   deleteAccountFromConfigSection,
   discordOnboardingAdapter,
   DiscordConfigSchema,
+  formatAllowFromLowercase,
   formatPairingApproveHint,
   getChatChannelMeta,
   listDiscordAccountIds,
@@ -107,10 +109,7 @@ export const discordPlugin: ChannelPlugin<ResolvedDiscordAccount> = {
     resolveAllowFrom: ({ cfg, accountId }) =>
       (resolveDiscordAccount({ cfg, accountId }).config.dm?.allowFrom ?? []).map(String),
     formatAllowFrom: ({ allowFrom }) =>
-      allowFrom
-        .map((entry) => String(entry).trim())
-        .filter(Boolean)
-        .map((entry) => entry.toLowerCase()),
+      formatAllowFromLowercase({ allowFrom, stripPrefixRe: /^(discord|user):/i }),
     resolveDefaultTo: ({ cfg, accountId }) =>
       resolveDiscordAccount({ cfg, accountId }).config.defaultTo?.trim() || undefined,
   },
@@ -383,21 +382,11 @@ export const discordPlugin: ChannelPlugin<ResolvedDiscordAccount> = {
       const app = runtime?.application ?? (probe as { application?: unknown })?.application;
       const bot = runtime?.bot ?? (probe as { bot?: unknown })?.bot;
       return {
-        accountId: account.accountId,
-        name: account.name,
-        enabled: account.enabled,
-        configured,
+        ...buildBaseAccountStatusSnapshot({ account: { ...account, configured }, runtime, probe }),
         tokenSource: account.tokenSource,
-        running: runtime?.running ?? false,
-        lastStartAt: runtime?.lastStartAt ?? null,
-        lastStopAt: runtime?.lastStopAt ?? null,
-        lastError: runtime?.lastError ?? null,
         application: app ?? undefined,
         bot: bot ?? undefined,
-        probe,
         audit,
-        lastInboundAt: runtime?.lastInboundAt ?? null,
-        lastOutboundAt: runtime?.lastOutboundAt ?? null,
       };
     },
   },

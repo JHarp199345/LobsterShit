@@ -1,8 +1,10 @@
 import {
   applyAccountNameToChannelSection,
+  buildBaseAccountStatusSnapshot,
   buildChannelConfigSchema,
   DEFAULT_ACCOUNT_ID,
   deleteAccountFromConfigSection,
+  formatAllowFromLowercase,
   formatPairingApproveHint,
   getChatChannelMeta,
   migrateBaseNameToDefaultAccount,
@@ -41,13 +43,7 @@ import {
 
 const meta = getChatChannelMeta("googlechat");
 
-const formatAllowFromEntry = (entry: string) =>
-  entry
-    .trim()
-    .replace(/^(googlechat|google-chat|gchat):/i, "")
-    .replace(/^user:/i, "")
-    .replace(/^users\//i, "")
-    .toLowerCase();
+const gchatPrefixRe = /^(googlechat|google-chat|gchat|user):|^users\//i;
 
 export const googlechatDock: ChannelDock = {
   id: "googlechat",
@@ -63,10 +59,7 @@ export const googlechatDock: ChannelDock = {
     resolveAllowFrom: ({ cfg, accountId }) =>
       (resolveGoogleChatAccount({ cfg: cfg, accountId }).config.dm?.allowFrom ?? []).map(String),
     formatAllowFrom: ({ allowFrom }) =>
-      allowFrom
-        .map(String)
-        .filter(Boolean)
-        .map(formatAllowFromEntry),
+      formatAllowFromLowercase({ allowFrom, stripPrefixRe: gchatPrefixRe }),
   },
   groups: {
     resolveRequireMention: resolveGoogleChatGroupRequireMention,
@@ -101,7 +94,7 @@ export const googlechatPlugin: ChannelPlugin<ResolvedGoogleChatAccount> = {
   onboarding: googlechatOnboardingAdapter,
   pairing: {
     idLabel: "googlechatUserId",
-    normalizeAllowEntry: (entry) => formatAllowFromEntry(entry),
+    normalizeAllowEntry: (entry) => formatAllowFromLowercase({ allowFrom: [entry], stripPrefixRe: gchatPrefixRe })[0] ?? entry.trim().toLowerCase(),
     notifyApproval: async ({ cfg, id }) => {
       const account = resolveGoogleChatAccount({ cfg: cfg });
       if (account.credentialSource === "none") {
@@ -174,10 +167,7 @@ export const googlechatPlugin: ChannelPlugin<ResolvedGoogleChatAccount> = {
         }).config.dm?.allowFrom ?? []
       ).map(String),
     formatAllowFrom: ({ allowFrom }) =>
-      allowFrom
-        .map(String)
-        .filter(Boolean)
-        .map(formatAllowFromEntry),
+      formatAllowFromLowercase({ allowFrom, stripPrefixRe: gchatPrefixRe }),
     resolveDefaultTo: ({ cfg, accountId }) =>
       resolveGoogleChatAccount({ cfg, accountId }).config.defaultTo?.trim() || undefined,
   },
@@ -193,7 +183,7 @@ export const googlechatPlugin: ChannelPlugin<ResolvedGoogleChatAccount> = {
         allowFrom: account.config.dm?.allowFrom ?? [],
         allowFromPath,
         approveHint: formatPairingApproveHint("googlechat"),
-        normalizeEntry: (raw) => formatAllowFromEntry(raw),
+        normalizeEntry: (raw) => formatAllowFromLowercase({ allowFrom: [raw], stripPrefixRe: gchatPrefixRe })[0] ?? raw.trim().toLowerCase(),
       };
     },
     collectWarnings: ({ account, cfg }) => {
@@ -521,23 +511,17 @@ export const googlechatPlugin: ChannelPlugin<ResolvedGoogleChatAccount> = {
     }),
     probeAccount: async ({ account }) => probeGoogleChat(account),
     buildAccountSnapshot: ({ account, runtime, probe }) => ({
-      accountId: account.accountId,
-      name: account.name,
-      enabled: account.enabled,
-      configured: account.credentialSource !== "none",
+      ...buildBaseAccountStatusSnapshot({
+        account: { ...account, configured: account.credentialSource !== "none" },
+        runtime,
+        probe,
+      }),
       credentialSource: account.credentialSource,
       audienceType: account.config.audienceType,
       audience: account.config.audience,
       webhookPath: account.config.webhookPath,
       webhookUrl: account.config.webhookUrl,
-      running: runtime?.running ?? false,
-      lastStartAt: runtime?.lastStartAt ?? null,
-      lastStopAt: runtime?.lastStopAt ?? null,
-      lastError: runtime?.lastError ?? null,
-      lastInboundAt: runtime?.lastInboundAt ?? null,
-      lastOutboundAt: runtime?.lastOutboundAt ?? null,
       dmPolicy: account.config.dm?.policy ?? "pairing",
-      probe,
     }),
   },
   gateway: {
