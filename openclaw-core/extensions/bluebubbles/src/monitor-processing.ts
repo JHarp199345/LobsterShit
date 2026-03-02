@@ -990,7 +990,7 @@ export async function processMessage(
       return value;
     }
     return value
-      .replace(REPLY_DIRECTIVE_TAG_RE, " ")
+      .replaceAll(REPLY_DIRECTIVE_TAG_RE, " ")
       .replaceAll(/[ \t]+/g, " ")
       .trim();
   };

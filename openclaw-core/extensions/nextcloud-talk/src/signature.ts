@@ -29,7 +29,7 @@ export function verifyNextcloudTalkSignature(params: {
   }
   let result = 0;
   for (let i = 0; i < signature.length; i++) {
-    result |= signature.charCodeAt(i) ^ expected.charCodeAt(i);
+    result |= (signature.codePointAt(i) ?? 0) ^ (expected.codePointAt(i) ?? 0);
   }
   return result === 0;
 }

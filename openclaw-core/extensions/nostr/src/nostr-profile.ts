@@ -257,11 +257,11 @@ export function sanitizeProfileForDisplay(profile: NostrProfile): NostrProfile {
       return undefined;
     }
     return str
-      .replaceAll(/&/g, "&amp;")
-      .replaceAll(/</g, "&lt;")
-      .replaceAll(/>/g, "&gt;")
-      .replaceAll(/"/g, "&quot;")
-      .replaceAll(/'/g, "&#039;");
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   };
 
   return {

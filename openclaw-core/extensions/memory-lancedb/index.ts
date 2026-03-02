@@ -26,7 +26,7 @@ import {
 
 let lancedbImportPromise: Promise<typeof import("@lancedb/lancedb")> | null = null;
 const loadLanceDB = async (): Promise<typeof import("@lancedb/lancedb")> => {
-  if (!lancedbImportPromise) {
+  if (lancedbImportPromise === null) {
     lancedbImportPromise = import("@lancedb/lancedb");
   }
   try {
@@ -71,7 +71,7 @@ class MemoryDB {
     if (this.table) {
       return;
     }
-    if (this.initPromise) {
+    if (this.initPromise !== null) {
       return this.initPromise;
     }
 
@@ -509,7 +509,7 @@ const memoryPlugin = {
           .option("--limit <n>", "Max results", "5")
           .action(async (query, opts) => {
             const vector = await embeddings.embed(query);
-            const results = await db.search(vector, parseInt(opts.limit), 0.3);
+            const results = await db.search(vector, Number.parseInt(opts.limit, 10), 0.3);
             // Strip vectors for output
             const output = results.map((r) => ({
               id: r.entry.id,

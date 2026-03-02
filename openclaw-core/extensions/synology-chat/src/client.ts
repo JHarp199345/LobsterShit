@@ -28,8 +28,8 @@ export async function sendMessage(
   const payloadObj: Record<string, any> = { text };
   if (userId) {
     // userId can be numeric ID or username - if numeric, add to user_ids
-    const numericId = typeof userId === "number" ? userId : parseInt(userId, 10);
-    if (!isNaN(numericId)) {
+    const numericId = typeof userId === "number" ? userId : Number.parseInt(userId, 10);
+    if (!Number.isNaN(numericId)) {
       payloadObj.user_ids = [numericId];
     }
   }
@@ -75,8 +75,8 @@ export async function sendFileUrl(
 ): Promise<boolean> {
   const payloadObj: Record<string, any> = { file_url: fileUrl };
   if (userId) {
-    const numericId = typeof userId === "number" ? userId : parseInt(userId, 10);
-    if (!isNaN(numericId)) {
+    const numericId = typeof userId === "number" ? userId : Number.parseInt(userId, 10);
+    if (!Number.isNaN(numericId)) {
       payloadObj.user_ids = [numericId];
     }
   }

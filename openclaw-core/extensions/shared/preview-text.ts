@@ -16,7 +16,7 @@ export function truncatePreview(text: string | undefined | null, maxLen = 160): 
  * Truncate and escape newlines for single-line log output (e.g. JSON-safe preview).
  */
 export function previewForLog(text: string | undefined | null, maxLen = 200): string {
-  const s = String(text ?? "").slice(0, maxLen).replaceAll(/\n/g, "\\n");
+  const s = String(text ?? "").slice(0, maxLen).replaceAll("\n", "\\n");
   return s;
 }
 

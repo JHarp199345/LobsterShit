@@ -311,7 +311,7 @@ export class TwilioProvider implements VoiceCallProvider {
         type: "call.speech",
         transcript: speechResult,
         isFinal: true,
-        confidence: parseFloat(params.get("Confidence") || "0.9"),
+        confidence: Number.parseFloat(params.get("Confidence") || "0.9"),
       };
     }
 

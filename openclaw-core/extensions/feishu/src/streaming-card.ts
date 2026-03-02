@@ -53,7 +53,7 @@ function truncateSummary(text: string, max = 50): string {
   if (!text) {
     return "";
   }
-  const clean = text.replaceAll(/\n/g, " ").trim();
+  const clean = text.replaceAll("\n", " ").trim();
   return clean.length <= max ? clean : clean.slice(0, max - 3) + "...";
 }
 

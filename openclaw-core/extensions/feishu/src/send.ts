@@ -85,7 +85,7 @@ export async function getMessageFeishu(params: {
       senderOpenId: item.sender?.id_type === "open_id" ? item.sender?.id : undefined,
       content,
       contentType: item.msg_type ?? "text",
-      createTime: item.create_time ? parseInt(item.create_time, 10) : undefined,
+      createTime: item.create_time ? Number.parseInt(item.create_time, 10) : undefined,
     };
   } catch {
     return null;

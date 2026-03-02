@@ -173,7 +173,7 @@ const voiceCallPlugin = {
       if (runtime) {
         return runtime;
       }
-      if (!runtimePromise) {
+      if (runtimePromise === null) {
         runtimePromise = createVoiceCallRuntime({
           config,
           coreConfig: api.config as CoreConfig,
@@ -494,7 +494,7 @@ const voiceCallPlugin = {
         }
       },
       stop: async () => {
-        if (!runtimePromise) {
+        if (runtimePromise === null) {
           return;
         }
         try {

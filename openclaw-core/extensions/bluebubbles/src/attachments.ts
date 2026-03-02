@@ -199,7 +199,7 @@ export async function sendBlueBubblesAttachment(params: {
   });
 
   // Build FormData with the attachment
-  const boundary = `----BlueBubblesFormBoundary${crypto.randomUUID().replaceAll(/-/g, "")}`;
+  const boundary = `----BlueBubblesFormBoundary${crypto.randomUUID().replaceAll("-", "")}`;
   const parts: Uint8Array[] = [];
   const encoder = new TextEncoder();
 

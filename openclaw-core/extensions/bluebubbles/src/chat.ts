@@ -294,7 +294,7 @@ export async function setGroupIconBlueBubbles(
   });
 
   // Build multipart form-data
-  const boundary = `----BlueBubblesFormBoundary${crypto.randomUUID().replaceAll(/-/g, "")}`;
+  const boundary = `----BlueBubblesFormBoundary${crypto.randomUUID().replaceAll("-", "")}`;
   const parts: Uint8Array[] = [];
   const encoder = new TextEncoder();
 

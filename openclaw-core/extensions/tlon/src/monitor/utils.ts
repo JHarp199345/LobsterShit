@@ -22,7 +22,7 @@ export function formatModelName(modelString?: string | null): string {
     return modelMappings[modelName];
   }
   return modelName
-    .replaceAll(/-/g, " ")
+    .replaceAll("-", " ")
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");

@@ -8,5 +8,5 @@
  * Use when building RegExp from user input (mentions, search, etc.).
  */
 export function escapeForRegex(input: string): string {
-  return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return input.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

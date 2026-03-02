@@ -19,8 +19,6 @@ export type MemoryCategory = (typeof MEMORY_CATEGORIES)[number];
 
 const DEFAULT_MODEL = "text-embedding-3-small";
 export const DEFAULT_CAPTURE_MAX_CHARS = 500;
-const LEGACY_STATE_DIRS: string[] = [];
-
 function resolveDefaultDbPath(): string {
   const home = homedir();
   const preferred = join(home, ".openclaw", "memory", "lancedb");
@@ -31,18 +29,6 @@ function resolveDefaultDbPath(): string {
   } catch {
     // best-effort
   }
-
-  for (const legacy of LEGACY_STATE_DIRS) {
-    const candidate = join(home, legacy, "memory", "lancedb");
-    try {
-      if (fs.existsSync(candidate)) {
-        return candidate;
-      }
-    } catch {
-      // best-effort
-    }
-  }
-
   return preferred;
 }
 
@@ -70,7 +56,7 @@ export function vectorDimsForModel(model: string): number {
 }
 
 function resolveEnvVars(value: string): string {
-  return value.replace(/\$\{([^}]+)\}/g, (_, envVar) => {
+  return value.replaceAll(/\$\{([^}]+)\}/g, (_, envVar) => {
     const envValue = process.env[envVar];
     if (!envValue) {
       throw new Error(`Environment variable ${envVar} is not set`);

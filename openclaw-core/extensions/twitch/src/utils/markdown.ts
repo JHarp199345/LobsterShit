@@ -19,32 +19,32 @@ export function stripMarkdownForTwitch(markdown: string): string {
   return (
     markdown
       // Images
-      .replace(/!\[[^\]]*]\([^)]+\)/g, "")
+      .replaceAll(/!\[[^\]]*]\([^)]+\)/g, "")
       // Links
-      .replace(/\[([^\]]+)]\([^)]+\)/g, "$1")
+      .replaceAll(/\[([^\]]+)]\([^)]+\)/g, "$1")
       // Bold (**text**)
-      .replace(/\*\*([^*]+)\*\*/g, "$1")
+      .replaceAll(/\*\*([^*]+)\*\*/g, "$1")
       // Bold (__text__)
-      .replace(/__([^_]+)__/g, "$1")
+      .replaceAll(/__([^_]+)__/g, "$1")
       // Italic (*text*)
-      .replace(/\*([^*]+)\*/g, "$1")
+      .replaceAll(/\*([^*]+)\*/g, "$1")
       // Italic (_text_)
-      .replace(/_([^_]+)_/g, "$1")
+      .replaceAll(/_([^_]+)_/g, "$1")
       // Strikethrough (~~text~~)
-      .replace(/~~([^~]+)~~/g, "$1")
+      .replaceAll(/~~([^~]+)~~/g, "$1")
       // Code blocks
-      .replaceAll(/```[\s\S]*?```/g, (block) => block.replaceAll(/```[^\n]*\n?/g, "").replaceAll(/```/g, ""))
+      .replaceAll(/```[\s\S]*?```/g, (block) => block.replaceAll(/```[^\n]*\n?/g, "").replaceAll("```", ""))
       // Inline code
-      .replace(/`([^`]+)`/g, "$1")
+      .replaceAll(/`([^`]+)`/g, "$1")
       // Headers
       .replaceAll(/^#{1,6}\s+/gm, "")
       // Lists
       .replaceAll(/^\s*[-*+]\s+/gm, "")
       .replaceAll(/^\s*\d+\.\s+/gm, "")
       // Normalize whitespace
-      .replaceAll(/\r/g, "") // Remove carriage returns
+      .replaceAll("\r", "") // Remove carriage returns
       .replaceAll(/[ \t]+\n/g, "\n") // Remove trailing spaces before newlines
-      .replaceAll(/\n/g, " ") // Replace newlines with spaces (for Twitch)
+      .replaceAll("\n", " ") // Replace newlines with spaces (for Twitch)
       .replaceAll(/[ \t]{2,}/g, " ") // Reduce multiple spaces to single
       .trim()
   );

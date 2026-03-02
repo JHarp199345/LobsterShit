@@ -106,7 +106,7 @@ export async function ensurePinnedAcpx(params: {
   pluginRoot?: string;
   expectedVersion?: string;
 }): Promise<void> {
-  if (pendingEnsure) {
+  if (pendingEnsure !== null) {
     return await pendingEnsure;
   }
 

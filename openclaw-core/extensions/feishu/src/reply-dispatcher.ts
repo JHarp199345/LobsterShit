@@ -83,7 +83,7 @@ export function createFeishuReplyDispatcher(params: CreateFeishuReplyDispatcherP
   let streamingStartPromise: Promise<void> | null = null;
 
   const startStreaming = () => {
-    if (!streamingEnabled || streamingStartPromise || streaming) {
+    if (!streamingEnabled || streamingStartPromise !== null || streaming) {
       return;
     }
     streamingStartPromise = (async () => {
@@ -108,7 +108,7 @@ export function createFeishuReplyDispatcher(params: CreateFeishuReplyDispatcherP
   };
 
   const closeStreaming = async () => {
-    if (streamingStartPromise) {
+    if (streamingStartPromise !== null) {
       await streamingStartPromise;
     }
     await partialUpdateQueue;
@@ -146,7 +146,7 @@ export function createFeishuReplyDispatcher(params: CreateFeishuReplyDispatcherP
 
         if ((info?.kind === "block" || info?.kind === "final") && streamingEnabled && useCard) {
           startStreaming();
-          if (streamingStartPromise) {
+          if (streamingStartPromise !== null) {
             await streamingStartPromise;
           }
         }
@@ -224,7 +224,7 @@ export function createFeishuReplyDispatcher(params: CreateFeishuReplyDispatcherP
             lastPartial = payload.text;
             streamText = payload.text;
             partialUpdateQueue = partialUpdateQueue.then(async () => {
-              if (streamingStartPromise) {
+              if (streamingStartPromise !== null) {
                 await streamingStartPromise;
               }
               if (streaming?.isActive()) {
