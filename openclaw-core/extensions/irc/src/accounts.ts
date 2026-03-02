@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { createAccountListHelpers } from "openclaw/plugin-sdk";
 import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "openclaw/plugin-sdk/account-id";
 import type { CoreConfig, IrcAccountConfig, IrcNickServConfig } from "./types.js";
 
@@ -49,20 +50,16 @@ function parseListEnv(value?: string): string[] | undefined {
   return parsed.length > 0 ? parsed : undefined;
 }
 
-function listConfiguredAccountIds(cfg: CoreConfig): string[] {
-  const accounts = cfg.channels?.irc?.accounts;
-  if (!accounts || typeof accounts !== "object") {
-    return [];
-  }
-  const ids = new Set<string>();
-  for (const key of Object.keys(accounts)) {
-    if (key.trim()) {
-      ids.add(normalizeAccountId(key));
-    }
-  }
-  return [...ids];
-}
+const { listAccountIds: listIrcAccountIds, resolveDefaultAccountId: resolveDefaultIrcAccountId } =
+  createAccountListHelpers("irc");
 
+export { listIrcAccountIds, resolveDefaultIrcAccountId };
+
+/**
+ * Resolve account-specific config with normalization fallback for key matching.
+ * IRC account IDs may contain characters that get canonicalized, so we try a
+ * fuzzy match when the direct key lookup misses.
+ */
 function resolveAccountConfig(cfg: CoreConfig, accountId: string): IrcAccountConfig | undefined {
   const accounts = cfg.channels?.irc?.accounts;
   if (!accounts || typeof accounts !== "object") {
@@ -83,11 +80,10 @@ function mergeIrcAccountConfig(cfg: CoreConfig, accountId: string): IrcAccountCo
   };
   const account = resolveAccountConfig(cfg, accountId) ?? {};
   const merged: IrcAccountConfig = { ...base, ...account };
+  // Nickserv is a nested object — deep-merge so partial account overrides
+  // still inherit base NickServ settings.
   if (base.nickserv || account.nickserv) {
-    merged.nickserv = {
-      ...base.nickserv,
-      ...account.nickserv,
-    };
+    merged.nickserv = { ...base.nickserv, ...account.nickserv };
   }
   return merged;
 }
@@ -144,22 +140,6 @@ function resolveNickServConfig(accountId: string, nickserv?: IrcNickServConfig):
     registerEmail: base.registerEmail?.trim() || envRegisterEmail || undefined,
   };
   return merged;
-}
-
-export function listIrcAccountIds(cfg: CoreConfig): string[] {
-  const ids = listConfiguredAccountIds(cfg);
-  if (ids.length === 0) {
-    return [DEFAULT_ACCOUNT_ID];
-  }
-  return ids.toSorted((a, b) => a.localeCompare(b));
-}
-
-export function resolveDefaultIrcAccountId(cfg: CoreConfig): string {
-  const ids = listIrcAccountIds(cfg);
-  if (ids.includes(DEFAULT_ACCOUNT_ID)) {
-    return DEFAULT_ACCOUNT_ID;
-  }
-  return ids[0] ?? DEFAULT_ACCOUNT_ID;
 }
 
 export function resolveIrcAccount(params: {

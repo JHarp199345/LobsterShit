@@ -1,5 +1,7 @@
 import type { OpenClawConfig } from "openclaw/plugin-sdk";
-import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "openclaw/plugin-sdk/account-id";
+import { createAccountListHelpers } from "openclaw/plugin-sdk";
+import { normalizeAccountId } from "openclaw/plugin-sdk/account-id";
+import { mergeChannelAccountConfig } from "../../shared/account-config.js";
 import { normalizeBlueBubblesServerUrl, type BlueBubblesAccountConfig } from "./types.js";
 
 export type ResolvedBlueBubblesAccount = {
@@ -11,52 +13,23 @@ export type ResolvedBlueBubblesAccount = {
   baseUrl?: string;
 };
 
-function listConfiguredAccountIds(cfg: OpenClawConfig): string[] {
-  const accounts = cfg.channels?.bluebubbles?.accounts;
-  if (!accounts || typeof accounts !== "object") {
-    return [];
-  }
-  return Object.keys(accounts).filter(Boolean);
-}
+const {
+  listAccountIds: listBlueBubblesAccountIds,
+  resolveDefaultAccountId: resolveDefaultBlueBubblesAccountId,
+} = createAccountListHelpers("bluebubbles");
 
-export function listBlueBubblesAccountIds(cfg: OpenClawConfig): string[] {
-  const ids = listConfiguredAccountIds(cfg);
-  if (ids.length === 0) {
-    return [DEFAULT_ACCOUNT_ID];
-  }
-  return ids.toSorted((a, b) => a.localeCompare(b));
-}
-
-export function resolveDefaultBlueBubblesAccountId(cfg: OpenClawConfig): string {
-  const ids = listBlueBubblesAccountIds(cfg);
-  if (ids.includes(DEFAULT_ACCOUNT_ID)) {
-    return DEFAULT_ACCOUNT_ID;
-  }
-  return ids[0] ?? DEFAULT_ACCOUNT_ID;
-}
-
-function resolveAccountConfig(
-  cfg: OpenClawConfig,
-  accountId: string,
-): BlueBubblesAccountConfig | undefined {
-  const accounts = cfg.channels?.bluebubbles?.accounts;
-  if (!accounts || typeof accounts !== "object") {
-    return undefined;
-  }
-  return accounts[accountId] as BlueBubblesAccountConfig | undefined;
-}
+export { listBlueBubblesAccountIds, resolveDefaultBlueBubblesAccountId };
 
 function mergeBlueBubblesAccountConfig(
   cfg: OpenClawConfig,
   accountId: string,
 ): BlueBubblesAccountConfig {
-  const base = (cfg.channels?.bluebubbles ?? {}) as BlueBubblesAccountConfig & {
-    accounts?: unknown;
-  };
-  const { accounts: _ignored, ...rest } = base;
-  const account = resolveAccountConfig(cfg, accountId) ?? {};
-  const chunkMode = account.chunkMode ?? rest.chunkMode ?? "length";
-  return { ...rest, ...account, chunkMode };
+  const merged = mergeChannelAccountConfig<BlueBubblesAccountConfig>(
+    cfg,
+    "bluebubbles",
+    accountId,
+  );
+  return { ...merged, chunkMode: merged.chunkMode ?? "length" };
 }
 
 export function resolveBlueBubblesAccount(params: {
