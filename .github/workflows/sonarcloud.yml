@@ -14,18 +14,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Step 1: Install pnpm FIRST so the Node setup can use it for caching
+      # Step 1: Install pnpm FIRST
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9
 
-      # Step 2: Now setup Node.js and point it to the pnpm cache
+      # Step 2: Setup Node.js and point to the specific lock file location
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "pnpm"
+          # This is the "silver bullet" to fix the lock file not found error
+          cache-dependency-path: openclaw-core/pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
