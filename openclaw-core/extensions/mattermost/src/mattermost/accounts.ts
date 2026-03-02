@@ -1,5 +1,7 @@
 import type { OpenClawConfig } from "openclaw/plugin-sdk";
+import { createAccountListHelpers } from "openclaw/plugin-sdk";
 import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "openclaw/plugin-sdk/account-id";
+import { mergeChannelAccountConfig } from "../../../shared/account-config.js";
 import type { MattermostAccountConfig, MattermostChatMode } from "../types.js";
 import { normalizeMattermostBaseUrl } from "./client.js";
 
@@ -23,49 +25,18 @@ export type ResolvedMattermostAccount = {
   blockStreamingCoalesce?: MattermostAccountConfig["blockStreamingCoalesce"];
 };
 
-function listConfiguredAccountIds(cfg: OpenClawConfig): string[] {
-  const accounts = cfg.channels?.mattermost?.accounts;
-  if (!accounts || typeof accounts !== "object") {
-    return [];
-  }
-  return Object.keys(accounts).filter(Boolean);
-}
+const {
+  listAccountIds: listMattermostAccountIds,
+  resolveDefaultAccountId: resolveDefaultMattermostAccountId,
+} = createAccountListHelpers("mattermost");
 
-export function listMattermostAccountIds(cfg: OpenClawConfig): string[] {
-  const ids = listConfiguredAccountIds(cfg);
-  if (ids.length === 0) {
-    return [DEFAULT_ACCOUNT_ID];
-  }
-  return ids.toSorted((a, b) => a.localeCompare(b));
-}
-
-export function resolveDefaultMattermostAccountId(cfg: OpenClawConfig): string {
-  const ids = listMattermostAccountIds(cfg);
-  if (ids.includes(DEFAULT_ACCOUNT_ID)) {
-    return DEFAULT_ACCOUNT_ID;
-  }
-  return ids[0] ?? DEFAULT_ACCOUNT_ID;
-}
-
-function resolveAccountConfig(
-  cfg: OpenClawConfig,
-  accountId: string,
-): MattermostAccountConfig | undefined {
-  const accounts = cfg.channels?.mattermost?.accounts;
-  if (!accounts || typeof accounts !== "object") {
-    return undefined;
-  }
-  return accounts[accountId] as MattermostAccountConfig | undefined;
-}
+export { listMattermostAccountIds, resolveDefaultMattermostAccountId };
 
 function mergeMattermostAccountConfig(
   cfg: OpenClawConfig,
   accountId: string,
 ): MattermostAccountConfig {
-  const { accounts: _ignored, ...base } = (cfg.channels?.mattermost ??
-    {}) as MattermostAccountConfig & { accounts?: unknown };
-  const account = resolveAccountConfig(cfg, accountId) ?? {};
-  return { ...base, ...account };
+  return mergeChannelAccountConfig<MattermostAccountConfig>(cfg, "mattermost", accountId);
 }
 
 function resolveMattermostRequireMention(config: MattermostAccountConfig): boolean | undefined {
@@ -101,13 +72,14 @@ export function resolveMattermostAccount(params: {
   const requireMention = resolveMattermostRequireMention(merged);
 
   let botTokenSource: MattermostTokenSource;
-    if (configToken) botTokenSource = "config";
-    else if (envToken) botTokenSource = "env";
-    else botTokenSource = "none";
-    let baseUrlSource: MattermostBaseUrlSource;
-    if (configUrl) baseUrlSource = "config";
-    else if (envUrl) baseUrlSource = "env";
-    else baseUrlSource = "none";
+  if (configToken) botTokenSource = "config";
+  else if (envToken) botTokenSource = "env";
+  else botTokenSource = "none";
+
+  let baseUrlSource: MattermostBaseUrlSource;
+  if (configUrl) baseUrlSource = "config";
+  else if (envUrl) baseUrlSource = "env";
+  else baseUrlSource = "none";
 
   return {
     accountId,

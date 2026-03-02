@@ -1,5 +1,6 @@
 import {
   applyAccountNameToChannelSection,
+  buildBaseAccountStatusSnapshot,
   buildChannelConfigSchema,
   DEFAULT_ACCOUNT_ID,
   deleteAccountFromConfigSection,
@@ -320,22 +321,16 @@ export const mattermostPlugin: ChannelPlugin<ResolvedMattermostAccount> = {
       return await probeMattermost(baseUrl, token, timeoutMs);
     },
     buildAccountSnapshot: ({ account, runtime, probe }) => ({
-      accountId: account.accountId,
-      name: account.name,
-      enabled: account.enabled,
-      configured: Boolean(account.botToken && account.baseUrl),
+      ...buildBaseAccountStatusSnapshot({
+        account: { ...account, configured: Boolean(account.botToken && account.baseUrl) },
+        runtime,
+        probe,
+      }),
       botTokenSource: account.botTokenSource,
       baseUrl: account.baseUrl,
-      running: runtime?.running ?? false,
       connected: runtime?.connected ?? false,
       lastConnectedAt: runtime?.lastConnectedAt ?? null,
       lastDisconnect: runtime?.lastDisconnect ?? null,
-      lastStartAt: runtime?.lastStartAt ?? null,
-      lastStopAt: runtime?.lastStopAt ?? null,
-      lastError: runtime?.lastError ?? null,
-      probe,
-      lastInboundAt: runtime?.lastInboundAt ?? null,
-      lastOutboundAt: runtime?.lastOutboundAt ?? null,
     }),
   },
   setup: {

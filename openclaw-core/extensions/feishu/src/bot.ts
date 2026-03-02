@@ -1,5 +1,5 @@
 import type { ClawdbotConfig, RuntimeEnv } from "openclaw/plugin-sdk";
-import { truncatePreview, truncateTo } from "../../../shared/preview-text.js";
+import { truncatePreview, truncateTo } from "../../shared/preview-text.js";
 import {
   buildAgentMediaPayload,
   buildPendingHistoryContextFromMap,

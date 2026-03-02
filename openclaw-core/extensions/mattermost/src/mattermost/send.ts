@@ -1,6 +1,12 @@
 import { getMattermostRuntime } from "../runtime.js";
 import { resolveMattermostAccount } from "./accounts.js";
 import {
+  convertMarkdownForChannel,
+  isHttpUrl,
+  normalizeTextWithMedia,
+  recordOutboundActivity,
+} from "../../../shared/send-helpers.js";
+import {
   createMattermostClient,
   createMattermostDirectChannel,
   createMattermostPost,
@@ -35,16 +41,6 @@ const getCore = () => getMattermostRuntime();
 
 function cacheKey(baseUrl: string, token: string): string {
   return `${baseUrl}::${token}`;
-}
-
-function normalizeMessage(text: string, mediaUrl?: string): string {
-  const trimmed = text.trim();
-  const media = mediaUrl?.trim();
-  return [trimmed, media].filter(Boolean).join("\n");
-}
-
-function isHttpUrl(value: string): boolean {
-  return /^https?:\/\//i.test(value);
 }
 
 function parseMattermostTarget(raw: string): MattermostTarget {
@@ -191,17 +187,16 @@ export async function sendMessageMattermost(
           `mattermost send: media upload failed, falling back to URL text: ${String(err)}`,
         );
       }
-      message = normalizeMessage(message, isHttpUrl(mediaUrl) ? mediaUrl : "");
+      message = normalizeTextWithMedia(message, isHttpUrl(mediaUrl) ? mediaUrl : undefined);
     }
   }
 
   if (message) {
-    const tableMode = core.channel.text.resolveMarkdownTableMode({
-      cfg,
-      channel: "mattermost",
-      accountId: account.accountId,
-    });
-    message = core.channel.text.convertMarkdownTables(message, tableMode);
+    message = convertMarkdownForChannel(
+      core,
+      { cfg, channel: "mattermost", accountId: account.accountId },
+      message,
+    );
   }
 
   if (!message && (!fileIds || fileIds.length === 0)) {
@@ -218,11 +213,7 @@ export async function sendMessageMattermost(
     fileIds,
   });
 
-  core.channel.activity.record({
-    channel: "mattermost",
-    accountId: account.accountId,
-    direction: "outbound",
-  });
+  recordOutboundActivity(core, { channel: "mattermost", accountId: account.accountId });
 
   return {
     messageId: post.id ?? "unknown",

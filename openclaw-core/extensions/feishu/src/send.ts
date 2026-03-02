@@ -7,6 +7,7 @@ import { getFeishuRuntime } from "./runtime.js";
 import { assertFeishuMessageApiSuccess, toFeishuSendResult } from "./send-result.js";
 import { resolveFeishuSendTarget } from "./send-target.js";
 import type { FeishuSendResult } from "./types.js";
+import { convertMarkdownForChannel } from "../../shared/send-helpers.js";
 
 export type FeishuMessageInfo = {
   messageId: string;
@@ -129,17 +130,16 @@ export async function sendMessageFeishu(
 ): Promise<FeishuSendResult> {
   const { cfg, to, text, replyToMessageId, mentions, accountId } = params;
   const { client, receiveId, receiveIdType } = resolveFeishuSendTarget({ cfg, to, accountId });
-  const tableMode = getFeishuRuntime().channel.text.resolveMarkdownTableMode({
-    cfg,
-    channel: "feishu",
-  });
-
   // Build message content (with @mention support)
   let rawText = text ?? "";
   if (mentions && mentions.length > 0) {
     rawText = buildMentionedMessage(mentions, rawText);
   }
-  const messageText = getFeishuRuntime().channel.text.convertMarkdownTables(rawText, tableMode);
+  const messageText = convertMarkdownForChannel(
+    getFeishuRuntime(),
+    { cfg, channel: "feishu" },
+    rawText,
+  );
 
   const { content, msgType } = buildFeishuPostMessagePayload({ messageText });
 
@@ -291,11 +291,11 @@ export async function editMessageFeishu(params: {
   }
 
   const client = createFeishuClient(account);
-  const tableMode = getFeishuRuntime().channel.text.resolveMarkdownTableMode({
-    cfg,
-    channel: "feishu",
-  });
-  const messageText = getFeishuRuntime().channel.text.convertMarkdownTables(text ?? "", tableMode);
+  const messageText = convertMarkdownForChannel(
+    getFeishuRuntime(),
+    { cfg, channel: "feishu" },
+    text ?? "",
+  );
 
   const { content, msgType } = buildFeishuPostMessagePayload({ messageText });
 

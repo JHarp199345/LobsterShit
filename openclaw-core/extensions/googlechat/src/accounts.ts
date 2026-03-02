@@ -1,5 +1,7 @@
 import type { OpenClawConfig } from "openclaw/plugin-sdk";
+import { createAccountListHelpers } from "openclaw/plugin-sdk";
 import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "openclaw/plugin-sdk/account-id";
+import { mergeChannelAccountConfig } from "../../shared/account-config.js";
 import type { GoogleChatAccountConfig } from "./types.config.js";
 
 export type GoogleChatCredentialSource = "file" | "inline" | "env" | "none";
@@ -17,53 +19,25 @@ export type ResolvedGoogleChatAccount = {
 const ENV_SERVICE_ACCOUNT = "GOOGLE_CHAT_SERVICE_ACCOUNT";
 const ENV_SERVICE_ACCOUNT_FILE = "GOOGLE_CHAT_SERVICE_ACCOUNT_FILE";
 
-function listConfiguredAccountIds(cfg: OpenClawConfig): string[] {
-  const accounts = cfg.channels?.["googlechat"]?.accounts;
-  if (!accounts || typeof accounts !== "object") {
-    return [];
-  }
-  return Object.keys(accounts).filter(Boolean);
-}
+const { listAccountIds, resolveDefaultAccountId } = createAccountListHelpers("googlechat");
 
-export function listGoogleChatAccountIds(cfg: OpenClawConfig): string[] {
-  const ids = listConfiguredAccountIds(cfg);
-  if (ids.length === 0) {
-    return [DEFAULT_ACCOUNT_ID];
-  }
-  return ids.toSorted((a, b) => a.localeCompare(b));
-}
+export const listGoogleChatAccountIds = listAccountIds;
 
 export function resolveDefaultGoogleChatAccountId(cfg: OpenClawConfig): string {
-  const channel = cfg.channels?.["googlechat"];
-  if (channel?.defaultAccount?.trim()) {
-    return channel.defaultAccount.trim();
-  }
-  const ids = listGoogleChatAccountIds(cfg);
-  if (ids.includes(DEFAULT_ACCOUNT_ID)) {
-    return DEFAULT_ACCOUNT_ID;
-  }
-  return ids[0] ?? DEFAULT_ACCOUNT_ID;
-}
-
-function resolveAccountConfig(
-  cfg: OpenClawConfig,
-  accountId: string,
-): GoogleChatAccountConfig | undefined {
-  const accounts = cfg.channels?.["googlechat"]?.accounts;
-  if (!accounts || typeof accounts !== "object") {
-    return undefined;
-  }
-  return accounts[accountId];
+  const defaultAccount = (
+    cfg.channels?.["googlechat"] as { defaultAccount?: string } | undefined
+  )?.defaultAccount?.trim();
+  if (defaultAccount) return defaultAccount;
+  return resolveDefaultAccountId(cfg);
 }
 
 function mergeGoogleChatAccountConfig(
   cfg: OpenClawConfig,
   accountId: string,
 ): GoogleChatAccountConfig {
-  const raw = cfg.channels?.["googlechat"] ?? {};
-  const { accounts: _ignored, defaultAccount: _ignored2, ...base } = raw;
-  const account = resolveAccountConfig(cfg, accountId) ?? {};
-  return { ...base, ...account } as GoogleChatAccountConfig;
+  return mergeChannelAccountConfig<GoogleChatAccountConfig>(cfg, "googlechat", accountId, [
+    "defaultAccount",
+  ]);
 }
 
 function parseServiceAccount(value: unknown): Record<string, unknown> | null {

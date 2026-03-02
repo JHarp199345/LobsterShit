@@ -1,8 +1,10 @@
 import {
   applyAccountNameToChannelSection,
+  buildBaseAccountStatusSnapshot,
   buildChannelConfigSchema,
   DEFAULT_ACCOUNT_ID,
   deleteAccountFromConfigSection,
+  formatAllowFromLowercase,
   formatPairingApproveHint,
   normalizeAccountId,
   resolveAllowlistProviderRuntimeGroupPolicy,
@@ -106,11 +108,7 @@ export const nextcloudTalkPlugin: ChannelPlugin<ResolvedNextcloudTalkAccount> = 
         resolveNextcloudTalkAccount({ cfg: cfg as CoreConfig, accountId }).config.allowFrom ?? []
       ).map((entry) => String(entry).toLowerCase()),
     formatAllowFrom: ({ allowFrom }) =>
-      allowFrom
-        .map((entry) => String(entry).trim())
-        .filter(Boolean)
-        .map((entry) => entry.replace(/^(nextcloud-talk|nc-talk|nc):/i, ""))
-        .map((entry) => entry.toLowerCase()),
+      formatAllowFromLowercase({ allowFrom, stripPrefixRe: /^(nextcloud-talk|nc-talk|nc):/i }),
   },
   security: {
     resolveDmPolicy: ({ cfg, accountId, account }) => {
@@ -295,24 +293,18 @@ export const nextcloudTalkPlugin: ChannelPlugin<ResolvedNextcloudTalkAccount> = 
       lastStopAt: snapshot.lastStopAt ?? null,
       lastError: snapshot.lastError ?? null,
     }),
-    buildAccountSnapshot: ({ account, runtime }) => {
-      const configured = Boolean(account.secret?.trim() && account.baseUrl?.trim());
-      return {
-        accountId: account.accountId,
-        name: account.name,
-        enabled: account.enabled,
-        configured,
-        secretSource: account.secretSource,
-        baseUrl: account.baseUrl ? "[set]" : "[missing]",
-        running: runtime?.running ?? false,
-        lastStartAt: runtime?.lastStartAt ?? null,
-        lastStopAt: runtime?.lastStopAt ?? null,
-        lastError: runtime?.lastError ?? null,
-        mode: "webhook",
-        lastInboundAt: runtime?.lastInboundAt ?? null,
-        lastOutboundAt: runtime?.lastOutboundAt ?? null,
-      };
-    },
+    buildAccountSnapshot: ({ account, runtime }) => ({
+      ...buildBaseAccountStatusSnapshot({
+        account: {
+          ...account,
+          configured: Boolean(account.secret?.trim() && account.baseUrl?.trim()),
+        },
+        runtime,
+      }),
+      secretSource: account.secretSource,
+      baseUrl: account.baseUrl ? "[set]" : "[missing]",
+      mode: "webhook",
+    }),
   },
   gateway: {
     startAccount: async (ctx) => {

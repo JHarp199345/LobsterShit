@@ -1,8 +1,10 @@
 import type { ChannelMeta, ChannelPlugin, ClawdbotConfig } from "openclaw/plugin-sdk";
 import {
+  buildBaseAccountStatusSnapshot,
   buildBaseChannelStatusSummary,
   createDefaultChannelRuntimeState,
   DEFAULT_ACCOUNT_ID,
+  formatAllowFromLowercase,
   PAIRING_APPROVED_MESSAGE,
   resolveAllowlistProviderRuntimeGroupPolicy,
   resolveDefaultGroupPolicy,
@@ -217,10 +219,7 @@ export const feishuPlugin: ChannelPlugin<ResolvedFeishuAccount> = {
       return (account.config?.allowFrom ?? []).map(String);
     },
     formatAllowFrom: ({ allowFrom }) =>
-      allowFrom
-        .map((entry) => String(entry).trim())
-        .filter(Boolean)
-        .map((entry) => entry.toLowerCase()),
+      formatAllowFromLowercase({ allowFrom, stripPrefixRe: /^(feishu|lark|user|open_id):/i }),
   },
   security: {
     collectWarnings: ({ cfg, accountId }) => {
@@ -325,18 +324,10 @@ export const feishuPlugin: ChannelPlugin<ResolvedFeishuAccount> = {
     }),
     probeAccount: async ({ account }) => await probeFeishu(account),
     buildAccountSnapshot: ({ account, runtime, probe }) => ({
-      accountId: account.accountId,
-      enabled: account.enabled,
-      configured: account.configured,
-      name: account.name,
+      ...buildBaseAccountStatusSnapshot({ account, runtime, probe }),
       appId: account.appId,
       domain: account.domain,
-      running: runtime?.running ?? false,
-      lastStartAt: runtime?.lastStartAt ?? null,
-      lastStopAt: runtime?.lastStopAt ?? null,
-      lastError: runtime?.lastError ?? null,
       port: runtime?.port ?? null,
-      probe,
     }),
   },
   gateway: {

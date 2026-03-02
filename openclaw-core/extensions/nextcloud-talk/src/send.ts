@@ -2,6 +2,10 @@ import { resolveNextcloudTalkAccount } from "./accounts.js";
 import { getNextcloudTalkRuntime } from "./runtime.js";
 import { generateNextcloudTalkSignature } from "./signature.js";
 import type { CoreConfig, NextcloudTalkSendResult } from "./types.js";
+import {
+  convertMarkdownForChannel,
+  recordOutboundActivity,
+} from "../../shared/send-helpers.js";
 
 type NextcloudTalkSendOpts = {
   baseUrl?: string;
@@ -75,14 +79,10 @@ export async function sendMessageNextcloudTalk(
     throw new Error("Message must be non-empty for Nextcloud Talk sends");
   }
 
-  const tableMode = getNextcloudTalkRuntime().channel.text.resolveMarkdownTableMode({
-    cfg,
-    channel: "nextcloud-talk",
-    accountId: account.accountId,
-  });
-  const message = getNextcloudTalkRuntime().channel.text.convertMarkdownTables(
+  const message = convertMarkdownForChannel(
+    getNextcloudTalkRuntime(),
+    { cfg, channel: "nextcloud-talk", accountId: account.accountId },
     text.trim(),
-    tableMode,
   );
 
   const body: Record<string, unknown> = {
@@ -160,10 +160,9 @@ export async function sendMessageNextcloudTalk(
     console.log(`[nextcloud-talk] Sent message ${messageId} to room ${roomToken}`);
   }
 
-  getNextcloudTalkRuntime().channel.activity.record({
+  recordOutboundActivity(getNextcloudTalkRuntime(), {
     channel: "nextcloud-talk",
     accountId: account.accountId,
-    direction: "outbound",
   });
 
   return { messageId, roomToken, timestamp };
