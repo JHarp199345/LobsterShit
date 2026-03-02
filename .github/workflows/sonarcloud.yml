@@ -28,12 +28,21 @@ jobs:
         run: pnpm install --no-frozen-lockfile
         working-directory: openclaw-core
 
-      # Tactical Fix: Force-copy the scripts to ensure they exist and are executable
+      # Tactical Fix: Force-sync using absolute workspace paths
       - name: Sync build scripts
         run: |
-          mkdir -p openclaw-core/scripts
-          cp -r scripts/* openclaw-core/scripts/
-          chmod +x openclaw-core/scripts/*.sh
+          SRC_DIR="${{ github.workspace }}/scripts"
+          DEST_DIR="${{ github.workspace }}/openclaw-core/scripts"
+          
+          if [ -d "$SRC_DIR" ]; then
+            mkdir -p "$DEST_DIR"
+            cp -Rv "$SRC_DIR"/* "$DEST_DIR/"
+            chmod +x "$DEST_DIR"/*.sh
+            echo "Successfully synced scripts to $DEST_DIR"
+          else
+            echo "Error: Root scripts directory not found at $SRC_DIR"
+            exit 1
+          fi
 
       - name: Build
         run: pnpm build
