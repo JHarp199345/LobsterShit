@@ -44,7 +44,7 @@ export function listNextcloudTalkAccountIds(cfg: CoreConfig): string[] {
   if (ids.length === 0) {
     return [DEFAULT_ACCOUNT_ID];
   }
-  return ids.toSorted((a, b) => a.localeCompare(b));
+  return [...ids].sort((a, b) => a.localeCompare(b));
 }
 
 export function resolveDefaultNextcloudTalkAccountId(cfg: CoreConfig): string {

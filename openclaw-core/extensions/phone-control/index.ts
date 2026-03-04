@@ -33,7 +33,7 @@ const GROUP_COMMANDS: Record<Exclude<ArmGroup, "all">, string[]> = {
 };
 
 function uniqSorted(values: string[]): string[] {
-  return [...new Set(values.map((v) => v.trim()).filter(Boolean))].toSorted((a, b) =>
+  return [...new Set(values.map((v) => v.trim()).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b),
   );
 }

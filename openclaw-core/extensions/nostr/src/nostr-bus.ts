@@ -266,7 +266,7 @@ function createRelayHealthTracker(): RelayHealthTracker {
     },
 
     getSortedRelays(relays: string[]): string[] {
-      return [...relays].toSorted((a, b) => this.getScore(b) - this.getScore(a));
+      return [...relays].sort((a, b) => this.getScore(b) - this.getScore(a));
     },
   };
 }

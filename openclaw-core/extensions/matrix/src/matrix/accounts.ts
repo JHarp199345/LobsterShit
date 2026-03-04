@@ -50,7 +50,7 @@ export function listMatrixAccountIds(cfg: CoreConfig): string[] {
     // Fall back to default if no accounts configured (legacy top-level config)
     return [DEFAULT_ACCOUNT_ID];
   }
-  return ids.toSorted((a, b) => a.localeCompare(b));
+  return [...ids].sort((a, b) => a.localeCompare(b));
 }
 
 export function resolveDefaultMatrixAccountId(cfg: CoreConfig): string {

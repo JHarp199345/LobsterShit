@@ -44,6 +44,10 @@
       "types": "./dist/plugin-sdk/account-id.d.ts",
       "default": "./dist/plugin-sdk/account-id.js"
     },
+    "./plugin-sdk/infra/abort-signal": {
+      "types": "./dist/plugin-sdk/infra/abort-signal.d.ts",
+      "default": "./dist/plugin-sdk/infra/abort-signal.js"
+    },
     "./cli-entry": "./openclaw.mjs"
   },
   "scripts": {
@@ -183,6 +187,7 @@
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "file-type": "^21.3.0",
+    "google-auth-library": "^10.6.1",
     "grammy": "^1.40.1",
     "https-proxy-agent": "^7.0.6",
     "ipaddr.js": "^2.3.0",

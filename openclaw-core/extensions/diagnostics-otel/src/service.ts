@@ -279,7 +279,7 @@ export function createDiagnosticsOtelService(): OpenClawPluginService {
 
             const numericArgs = Object.entries(logObj)
               .filter(([key]) => /^\d+$/.test(key))
-              .toSorted((a, b) => Number(a[0]) - Number(b[0]))
+              .sort((a, b) => Number(a[0]) - Number(b[0]))
               .map(([, value]) => value);
 
             let bindings: Record<string, unknown> | undefined;

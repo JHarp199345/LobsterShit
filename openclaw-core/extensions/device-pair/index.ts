@@ -363,7 +363,7 @@ export default function register(api: OpenClawPluginApi) {
         let pending: (typeof list.pending)[number] | undefined;
         if (requested) {
           if (requested.toLowerCase() === "latest") {
-            pending = [...list.pending].toSorted((a, b) => (b.ts ?? 0) - (a.ts ?? 0))[0];
+            pending = [...list.pending].sort((a, b) => (b.ts ?? 0) - (a.ts ?? 0))[0];
           } else {
             pending = list.pending.find((entry) => entry.requestId === requested);
           }

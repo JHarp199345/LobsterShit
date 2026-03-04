@@ -41,8 +41,8 @@ function plivoV3Signature(params: {
   }
 
   const sortedQuery = Array.from(queryMap.keys())
-    .toSorted()
-    .flatMap((k) => [...(queryMap.get(k) ?? [])].toSorted().map((v) => `${k}=${v}`))
+    .sort()
+    .flatMap((k) => [...(queryMap.get(k) ?? [])].sort().map((v) => `${k}=${v}`))
     .join("&");
 
   const postParams = new URLSearchParams(params.postBody);
@@ -52,8 +52,8 @@ function plivoV3Signature(params: {
   }
 
   const sortedPost = Array.from(postMap.keys())
-    .toSorted()
-    .flatMap((k) => [...(postMap.get(k) ?? [])].toSorted().map((v) => `${k}${v}`))
+    .sort()
+    .flatMap((k) => [...(postMap.get(k) ?? [])].sort().map((v) => `${k}${v}`))
     .join("");
 
   const hasPost = sortedPost.length > 0;
@@ -75,7 +75,7 @@ function plivoV3Signature(params: {
 
 function twilioSignature(params: { authToken: string; url: string; postBody: string }): string {
   let dataToSign = params.url;
-  const sortedParams = Array.from(new URLSearchParams(params.postBody).entries()).toSorted((a, b) =>
+  const sortedParams = [...Array.from(new URLSearchParams(params.postBody).entries())].sort((a, b) =>
     a[0].localeCompare(b[0]),
   );
 

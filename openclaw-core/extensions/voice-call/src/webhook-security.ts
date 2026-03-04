@@ -100,7 +100,7 @@ export function validateTwilioSignature(
 
 function buildTwilioDataToSign(url: string, params: URLSearchParams): string {
   let dataToSign = url;
-  const sortedParams = Array.from(params.entries()).toSorted((a, b) =>
+  const sortedParams = [...Array.from(params.entries())].sort((a, b) =>
     a[0].localeCompare(b[0]),
   );
   for (const [key, value] of sortedParams) {
@@ -110,8 +110,8 @@ function buildTwilioDataToSign(url: string, params: URLSearchParams): string {
 }
 
 function buildCanonicalTwilioParamString(params: URLSearchParams): string {
-  return Array.from(params.entries())
-    .toSorted((a, b) => a[0].localeCompare(b[0]))
+  return [...Array.from(params.entries())]
+    .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
 }
@@ -690,8 +690,8 @@ function toParamMapFromSearchParams(sp: URLSearchParams): PlivoParamMap {
 
 function sortedQueryString(params: PlivoParamMap): string {
   const parts: string[] = [];
-  for (const key of Object.keys(params).toSorted((a, b) => a.localeCompare(b))) {
-    const values = [...params[key]].toSorted((a, b) => a.localeCompare(b));
+  for (const key of [...Object.keys(params)].sort((a, b) => a.localeCompare(b))) {
+    const values = [...params[key]].sort((a, b) => a.localeCompare(b));
     for (const value of values) {
       parts.push(`${key}=${value}`);
     }
@@ -701,8 +701,8 @@ function sortedQueryString(params: PlivoParamMap): string {
 
 function sortedParamsString(params: PlivoParamMap): string {
   const parts: string[] = [];
-  for (const key of Object.keys(params).toSorted((a, b) => a.localeCompare(b))) {
-    const values = [...params[key]].toSorted((a, b) => a.localeCompare(b));
+  for (const key of [...Object.keys(params)].sort((a, b) => a.localeCompare(b))) {
+    const values = [...params[key]].sort((a, b) => a.localeCompare(b));
     for (const value of values) {
       parts.push(`${key}${value}`);
     }
