@@ -27,6 +27,7 @@ APPROVE_MODE=0
 GOAL=100
 BATCH_LIMIT=10
 BATCH_COUNT=0
+SINCE_EPOCH=""   # Unix timestamp; if set, Gmail search filters by time instead of count
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -34,6 +35,7 @@ while [[ $# -gt 0 ]]; do
         --approve) APPROVE_MODE=1 ;;
         --batch-size) BATCH_LIMIT="${2:-10}"; shift ;;
         --batches) BATCH_COUNT="${2:-2}"; shift ;;
+        --since) SINCE_EPOCH="${2:-}"; shift ;;
         all|everything) GOAL="all" ;;
         [0-9]*) GOAL="$1" ;;
     esac
@@ -59,10 +61,18 @@ if [ ! -f "$STATE_FILE" ]; then
     # "all" = fetch everything (high limit); otherwise use GOAL as limit
     GOG_MAX="$GOAL"
     [ "$GOAL" = "all" ] && GOG_MAX=10000
-    
-    log_worker "No mission state found. Initializing for $GOAL emails..."
-    
-    ALL_IDS_JSON=$(gog gmail search 'is:unread' --max "$GOG_MAX" --json)
+
+    # Build Gmail search query — time-filter overrides count limit when --since is set
+    if [ -n "$SINCE_EPOCH" ]; then
+        GMAIL_QUERY="is:unread after:$SINCE_EPOCH"
+        GOG_MAX=500   # safety cap for time windows
+        log_worker "No mission state found. Initializing time-based mission (after epoch $SINCE_EPOCH)..."
+    else
+        GMAIL_QUERY="is:unread"
+        log_worker "No mission state found. Initializing for $GOAL emails..."
+    fi
+
+    ALL_IDS_JSON=$(gog gmail search "$GMAIL_QUERY" --max "$GOG_MAX" --json)
     IDS=$(echo "$ALL_IDS_JSON" | jq -c '.threads | map(.id)' 2>/dev/null)
     
     # Fallback to sed if jq fails to parse gog output

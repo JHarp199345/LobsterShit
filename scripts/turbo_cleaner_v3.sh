@@ -11,6 +11,9 @@ LIBRARY_DIR="/Users/jesseharper/.openclaw/prompt_library"
 DEBUG_RESPONSE_FILE="$WORKSPACE/turbo_debug_last_response.json"
 DEBUG_CONTENT_FILE="$WORKSPACE/turbo_debug_last_content.txt"
 
+# Source model auto-detector (model-agnostic: no hardcoded model names)
+[ -f "$WORKSPACE/scripts/lib/ollama_model.sh" ] && source "$WORKSPACE/scripts/lib/ollama_model.sh"
+
 touch "$DB_FILE" "$LEDGER_FILE" "$DIAG_LOG"
 
 # Source unified logger (fallback to legacy log_event if not found)
@@ -199,7 +202,12 @@ for m in $TURBO_MODELS; do
         break
     fi
 done
-[ -z "$CURRENT_MODEL" ] && CURRENT_MODEL="qwen3-vl:8b"
+# If no preferred model found, auto-detect whatever is installed in Ollama
+if [ -z "$CURRENT_MODEL" ]; then
+    CURRENT_MODEL=$(get_active_model 2>/dev/null)
+    [ -n "$CURRENT_MODEL" ] && harper_log INFO turbo "Auto-detected model" "model=$CURRENT_MODEL" 2>/dev/null || true
+fi
+[ -z "$CURRENT_MODEL" ] && log_event "CRITICAL: No Ollama model found. Install a model with: ollama pull <model>" && exit 1
 
 RESPONSE=$(call_ollama)
 CLEAN_JSON=$(parse_and_validate_json "$RESPONSE")
@@ -266,8 +274,19 @@ fi
 # Export globals for parallel subshells
 export DB_FILE LEDGER_FILE DIAG_LOG IDS_STR=$(printf "%s " "${IDS[@]}")
 TMP_RESULT_FILE="/tmp/turbo_results_$$"
-touch "$TMP_RESULT_FILE"
-export TMP_RESULT_FILE
+TMP_IMPORTANT_FILE="/tmp/turbo_important_$$"
+touch "$TMP_RESULT_FILE" "$TMP_IMPORTANT_FILE"
+export TMP_RESULT_FILE TMP_IMPORTANT_FILE
+
+# Build subject lookup for the SMS summary (ID -> Subject)
+declare -A SUBJECT_MAP
+while IFS='|' read -r entry; do
+    entry_id=$(echo "$entry" | sed 's/^ID: //' | cut -d' ' -f1)
+    entry_subj=$(echo "$entry" | grep -oP '(?<=Subject: ).*' 2>/dev/null || echo "")
+    [ -n "$entry_id" ] && SUBJECT_MAP["$entry_id"]="$entry_subj"
+done < <(echo -e "$EMAIL_DATA" | grep "^ID:")
+export SUBJECT_MAP_JSON
+SUBJECT_MAP_JSON=$(for k in "${!SUBJECT_MAP[@]}"; do echo "$k|${SUBJECT_MAP[$k]}"; done | jq -Rn '[inputs | split("|") | {(.[0]): .[1]}] | add // {}')
 
 apply_action() {
     local row=$1
@@ -307,6 +326,13 @@ apply_action() {
         return 1
     fi
 
+    # Track INBOX-labeled emails (these are the "important" ones)
+    if [ "$action" == "label" ] && [ "$label" == "INBOX" ]; then
+        local subj
+        subj=$(echo "$SUBJECT_MAP_JSON" | jq -r --arg id "$id" '.[$id] // "ID:\($id)"' 2>/dev/null || echo "ID:$id")
+        echo "$subj" >> "$TMP_IMPORTANT_FILE"
+    fi
+
     # EXECUTION
     local success=0
     case $action in
@@ -335,9 +361,17 @@ SUCCESS_COUNT=$(grep -c "SUCCESS" "$TMP_RESULT_FILE" || echo 0)
 FAILURE_COUNT=$(grep -c "FAILURE" "$TMP_RESULT_FILE" || echo 0)
 rm -f "$TMP_RESULT_FILE"
 
-SUMMARY="🦞 Batch Mission Complete. Success: $SUCCESS_COUNT, Failure: $FAILURE_COUNT. Verified through Truth Database."
+# Build SMS summary with any important (INBOX-labeled) emails
+IMPORTANT_COUNT=$(wc -l < "$TMP_IMPORTANT_FILE" | tr -d ' ')
+SUMMARY="🦞 Batch Done. Sorted: $SUCCESS_COUNT, Failed: $FAILURE_COUNT."
+if [ "$IMPORTANT_COUNT" -gt 0 ]; then
+    IMPORTANT_LIST=$(head -5 "$TMP_IMPORTANT_FILE" | tr '\n' '; ')
+    SUMMARY="$SUMMARY Important($IMPORTANT_COUNT): $IMPORTANT_LIST"
+fi
+rm -f "$TMP_IMPORTANT_FILE"
+
 log_event "[4/4] $SUMMARY"
-imsg send --text "$SUMMARY" --to +12818810740
+imsg send --to +12818810740 --text "$SUMMARY"
 if [ "$SILENT" -eq 0 ]; then
     openclaw agent --agent main --session-id "harper-cli-chat" --message "🏁 $SUMMARY" --local
 fi

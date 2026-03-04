@@ -12,20 +12,22 @@ NON_INTERACTIVE=0
 TOTAL_ARG=""
 BATCHES_ARG=""
 APPROVE_ALL_ARG=0
+SINCE_ARG=""   # Unix epoch timestamp for time-based missions
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         --total) TOTAL_ARG="$2"; shift 2 ;;
         --batches) BATCHES_ARG="$2"; shift 2 ;;
         --approve-all) APPROVE_ALL_ARG=1; shift ;;
+        --since) SINCE_ARG="$2"; shift 2 ;;
         *) TOTAL_ARG="$1"; shift ;;  # positional = total (e.g. ./script 50 or ./script all)
     esac
 done
 
-# Non-interactive: all params provided
-if [ -n "$TOTAL_ARG" ] && [ -n "$BATCHES_ARG" ]; then
+# Non-interactive: params from CLI/agent (--total+--batches OR --since+--batches)
+if ([ -n "$TOTAL_ARG" ] || [ -n "$SINCE_ARG" ]) && [ -n "$BATCHES_ARG" ]; then
     NON_INTERACTIVE=1
-    TOTAL_RAW="$TOTAL_ARG"
+    TOTAL_RAW="${TOTAL_ARG:-time-based}"
     BATCHES=${BATCHES_ARG:-2}
     APPROVE_ALL=$APPROVE_ALL_ARG
 fi
@@ -88,7 +90,11 @@ if [ "$NON_INTERACTIVE" -eq 0 ] && [ "$TOTAL" != "all" ]; then
 fi
 
 # --- Run architect: init (creates state) ---
-$ARCHITECT "$TOTAL" --batches "$BATCHES" || exit 1
+if [ -n "$SINCE_ARG" ]; then
+    $ARCHITECT --since "$SINCE_ARG" --batches "$BATCHES" || exit 1
+else
+    $ARCHITECT "$TOTAL" --batches "$BATCHES" || exit 1
+fi
 
 if [ ! -f "$STATE_FILE" ]; then
     echo "No emails to process (inbox empty or already complete)."

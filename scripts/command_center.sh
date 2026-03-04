@@ -15,6 +15,7 @@ DIAG_LOG="$WORKSPACE/turbo_diagnostic.log"
 
 # Source unified logger + rotate if needed
 [ -f "$WORKSPACE/scripts/lib/logger.sh" ] && source "$WORKSPACE/scripts/lib/logger.sh"
+[ -f "$WORKSPACE/scripts/lib/ollama_model.sh" ] && source "$WORKSPACE/scripts/lib/ollama_model.sh"
 [ -n "$(type -t harper_log_rotate 2>/dev/null)" ] && harper_log_rotate
 _cc_log() { [ -n "$(type -t harper_log 2>/dev/null)" ] && harper_log INFO command_center "$1" || echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$DIAG_LOG"; }
 
@@ -25,8 +26,15 @@ chmod +x "$ARCHITECT" "$TRIAGE" "$MONITOR" "$FULL_RESET" "$UNINSTALL_PERSISTENCE
 
 # 🚀 WARM-UP: Start gateway + pre-load model so first response is faster
 start_gateway_if_needed &
-# Pre-load model (cattle prod: model ready before first message)
-(ollama_reachable && ollama run qwen3-vl:8b "hi" >/dev/null 2>&1) &
+# Pre-load model — auto-detect active Ollama model (no hardcoding)
+(
+    if ollama_reachable; then
+        WARMUP_MODEL=$(get_active_model 2>/dev/null)
+        if [ -n "$WARMUP_MODEL" ]; then
+            ollama run "$WARMUP_MODEL" "hi" >/dev/null 2>&1
+        fi
+    fi
+) &
 
 # 🧼 STARTUP CLEANUP: Clear stale locks/PIDs
 rm -f /Users/jesseharper/.openclaw/agents/main/sessions/*.lock
@@ -117,6 +125,7 @@ show_menu() {
     echo " [3] 🔭 WATCH LIVE DIAGNOSTICS (Pulse)"
     echo " [4] 💬 CHAT (gateway + tools + approvals)"
     echo " [4b] 👁️ APPROVAL WATCHER (run [4] first, then 4b in split pane)"
+    echo " [4c] 📱 SMS LISTENER (background — directives via self-text)"
     echo " [5] ⚙️ TUNE M1 (Context Slider)"
     echo " [6] 🛑 FULL RESET (Kill all + clear locks — use when stuck or 'session file locked')"
     echo " [8] 🔌 UNINSTALL PERSISTENCE (remove launchd, run once)"
@@ -162,6 +171,16 @@ while true; do
         4b)
             # Approval watcher: run in split pane to approve exec requests from CLI
             "$WORKSPACE/scripts/approval_watcher.sh"
+            ;;
+        4c)
+            # SMS directive listener: background process — text yourself to issue commands
+            _cc_log "Starting SMS directive listener in background"
+            nohup "$WORKSPACE/scripts/imsg_directive_listener.sh" >> "$DIAG_LOG" 2>&1 &
+            echo "📱 SMS Listener started (PID $!). Text yourself to issue directives."
+            echo "   Examples: 'sort top 50 emails'  |  'status'  |  'stop'"
+            echo ""
+            echo -n "Press Enter to return to menu..."
+            read
             ;;
         5)
             echo "⚙️ M1 TUNING - Select Context Window:"
