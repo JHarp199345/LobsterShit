@@ -10,6 +10,13 @@
 INPUT="${1:-}"
 LOWER=$(echo "$INPUT" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9 .-]/ /g')
 
+# ── BOTTOM/OLDEST DETECTION ───────────────────────────────────────────────────
+# "bottom 50", "oldest 50", "50 oldest" → fetch in reverse (oldest-first) order
+BOTTOM_MODE=0
+if echo "$LOWER" | grep -qE '\b(bottom|oldest|oldest first|old)\b'; then
+    BOTTOM_MODE=1
+fi
+
 # ── COUNT EXTRACTION ──────────────────────────────────────────────────────────
 # Matches: "top 100", "last 28", "first 50", "100 emails", "28 messages", "next 10"
 COUNT=""
@@ -70,14 +77,15 @@ auto_batches() {
 }
 
 # ── OUTPUT ────────────────────────────────────────────────────────────────────
+BOTTOM_FLAG=""
+[ "$BOTTOM_MODE" -eq 1 ] && BOTTOM_FLAG="--bottom"
+
 if [ -n "$SINCE" ]; then
-    # Time-based: ignore count, pass --since to task_architect
     BATCHES=$(auto_batches 50)
-    echo "--since $SINCE --batches $BATCHES --approve-all"
+    echo "--since $SINCE --batches $BATCHES --approve-all $BOTTOM_FLAG"
 elif [ -n "$COUNT" ]; then
     BATCHES=$(auto_batches "$COUNT")
-    echo "--total $COUNT --batches $BATCHES --approve-all"
+    echo "--total $COUNT --batches $BATCHES --approve-all $BOTTOM_FLAG"
 else
-    # Fallback: process 50 most recent unread
-    echo "--total 50 --batches 5 --approve-all"
+    echo "--total 50 --batches 5 --approve-all $BOTTOM_FLAG"
 fi

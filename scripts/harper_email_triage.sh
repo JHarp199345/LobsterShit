@@ -12,7 +12,8 @@ NON_INTERACTIVE=0
 TOTAL_ARG=""
 BATCHES_ARG=""
 APPROVE_ALL_ARG=0
-SINCE_ARG=""   # Unix epoch timestamp for time-based missions
+SINCE_ARG=""    # Unix epoch timestamp for time-based missions
+BOTTOM_ARG=""   # If set, process oldest emails first
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -20,7 +21,8 @@ while [[ $# -gt 0 ]]; do
         --batches) BATCHES_ARG="$2"; shift 2 ;;
         --approve-all) APPROVE_ALL_ARG=1; shift ;;
         --since) SINCE_ARG="$2"; shift 2 ;;
-        *) TOTAL_ARG="$1"; shift ;;  # positional = total (e.g. ./script 50 or ./script all)
+        --bottom) BOTTOM_ARG="--bottom"; shift ;;
+        *) TOTAL_ARG="$1"; shift ;;
     esac
 done
 
@@ -91,9 +93,11 @@ fi
 
 # --- Run architect: init (creates state) ---
 if [ -n "$SINCE_ARG" ]; then
-    $ARCHITECT --since "$SINCE_ARG" --batches "$BATCHES" || exit 1
+    # shellcheck disable=SC2086
+    $ARCHITECT --since "$SINCE_ARG" --batches "$BATCHES" $BOTTOM_ARG || exit 1
 else
-    $ARCHITECT "$TOTAL" --batches "$BATCHES" || exit 1
+    # shellcheck disable=SC2086
+    $ARCHITECT "$TOTAL" --batches "$BATCHES" $BOTTOM_ARG || exit 1
 fi
 
 if [ ! -f "$STATE_FILE" ]; then

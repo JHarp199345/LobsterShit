@@ -28,6 +28,7 @@ GOAL=100
 BATCH_LIMIT=10
 BATCH_COUNT=0
 SINCE_EPOCH=""   # Unix timestamp; if set, Gmail search filters by time instead of count
+BOTTOM_MODE=0   # If 1, reverse order to process oldest-first
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -36,6 +37,7 @@ while [[ $# -gt 0 ]]; do
         --batch-size) BATCH_LIMIT="${2:-10}"; shift ;;
         --batches) BATCH_COUNT="${2:-2}"; shift ;;
         --since) SINCE_EPOCH="${2:-}"; shift ;;
+        --bottom) BOTTOM_MODE=1 ;;
         all|everything) GOAL="all" ;;
         [0-9]*) GOAL="$1" ;;
     esac
@@ -72,24 +74,39 @@ if [ ! -f "$STATE_FILE" ]; then
         log_worker "No mission state found. Initializing for $GOAL emails..."
     fi
 
-    ALL_IDS_JSON=$(gog gmail search "$GMAIL_QUERY" --max "$GOG_MAX" --json)
+    # For --bottom mode we fetch a larger pool then take the tail (oldest emails)
+    FETCH_MAX="$GOG_MAX"
+    if [ "$BOTTOM_MODE" -eq 1 ] && [ "$GOAL" != "all" ]; then
+        # Fetch up to 10× more so we have enough to slice the oldest N from
+        FETCH_MAX=$(( GOAL * 10 ))
+        [ "$FETCH_MAX" -gt 5000 ] && FETCH_MAX=5000
+    fi
+
+    ALL_IDS_JSON=$(gog gmail search "$GMAIL_QUERY" --max "$FETCH_MAX" --json)
     IDS=$(echo "$ALL_IDS_JSON" | jq -c '.threads | map(.id)' 2>/dev/null)
-    
+
     # Fallback to sed if jq fails to parse gog output
     if [ -z "$IDS" ] || [ "$IDS" == "null" ] || [ "$IDS" == "[]" ]; then
-        RAW_IDS=$(echo "$ALL_IDS_JSON" | sed -n 's/.*"id": "\([^"]*\)".*/\1/p' | head -n "$GOG_MAX")
+        RAW_IDS=$(echo "$ALL_IDS_JSON" | sed -n 's/.*"id": "\([^"]*\)".*/\1/p' | head -n "$FETCH_MAX")
         if [ -n "$RAW_IDS" ]; then
             IDS=$(echo "$RAW_IDS" | jq -R . | jq -s -c .)
         else
             IDS="[]"
         fi
     fi
-    
+
+    # --bottom: reverse the list (Gmail returns newest-first, reverse = oldest-first)
+    # then slice to GOAL so we work the oldest N emails
+    if [ "$BOTTOM_MODE" -eq 1 ] && [ "$GOAL" != "all" ]; then
+        IDS=$(echo "$IDS" | jq -c "reverse | .[:${GOAL}]" 2>/dev/null || echo "$IDS")
+        log_worker "Bottom mode: reversed list, taking oldest $GOAL emails."
+    fi
+
     if [ "$IDS" == "[]" ]; then
         echo "{\"status\": \"Complete\", \"message\": \"Inbox is already clean.\"}"
         exit 0
     fi
-    
+
     TOTAL=$(echo "$IDS" | jq '. | length')
     
     # If --batches was passed, compute batch_size from actual total

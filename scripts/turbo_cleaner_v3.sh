@@ -127,70 +127,121 @@ CURRENT_MODEL=""
 call_ollama() {
     local prompt_hint="$1"
     local model="${2:-}"
-    [ -z "$model" ] && model="${CURRENT_MODEL:-qwen3-vl:8b}"
+    [ -z "$model" ] && model="$CURRENT_MODEL"
     # Ollama structured output schema - enforces exact JSON shape
     local format_schema='{"type":"object","properties":{"decisions":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"action":{"type":"string"},"label":{"type":"string"}},"required":["id","action"]}}},"required":["decisions"]}'
+    local user_msg="Analyze these emails. Return ONLY valid JSON with a 'decisions' array.\n\n${EMAIL_DATA}"
+    [ -n "$prompt_hint" ] && user_msg="${prompt_hint}\n\n${EMAIL_DATA}"
     local json_payload
+    # Use printf | jq --rawfile to safely handle any chars in EMAIL_DATA
+    local tmp_data
+    tmp_data=$(mktemp)
+    printf '%s' "$EMAIL_DATA" > "$tmp_data"
     json_payload=$(jq -n \
         --arg model "$model" \
-        --arg system "$SYSTEM_PROMPT"$'\n'"$prompt_hint" \
-        --arg user "Analyze these emails. Return JSON: {\"decisions\":[{\"id\":\"ID\",\"action\":\"archive|label|delete|skip\",\"label\":\"...\"}]}"$'\n\n'"$EMAIL_DATA" \
+        --arg system "$SYSTEM_PROMPT" \
+        --arg hint "$prompt_hint" \
+        --rawfile emails "$tmp_data" \
         --argjson format "$format_schema" \
         '{
           model: $model,
           messages: [
             { role: "system", content: $system },
-            { role: "user", content: $user }
+            { role: "user",   content: ("Analyze these emails. Return ONLY valid JSON with a decisions array.\(if $hint != "" then "\n\n" + $hint else "" end)\n\n" + $emails) }
           ],
           stream: false,
           format: $format,
           think: false,
-          options: { temperature: 0 }
+          options: { temperature: 0, num_ctx: 8192 }
         }' 2>/dev/null)
+    rm -f "$tmp_data"
     if [ -z "$json_payload" ]; then
-        # Fallback if jq schema fails - use basic json format
+        # Fallback: plain json format, no schema (for older Ollama or models that reject schema)
+        tmp_data=$(mktemp)
+        printf '%s' "$EMAIL_DATA" > "$tmp_data"
         json_payload=$(jq -n \
             --arg model "$model" \
-            --arg system "$SYSTEM_PROMPT"$'\n'"$prompt_hint" \
-            --arg user "Analyze these emails and return valid JSON decisions:\n$EMAIL_DATA" \
-            '{ model: $model, messages: [{ role: "system", content: $system }, { role: "user", content: $user }], stream: false, format: "json", think: false, options: { temperature: 0 } }')
+            --arg system "$SYSTEM_PROMPT" \
+            --rawfile emails "$tmp_data" \
+            '{ model: $model, messages: [{ role: "system", content: $system }, { role: "user", content: ("Analyze these emails and return valid JSON:\n\n" + $emails) }], stream: false, format: "json", think: false, options: { temperature: 0 } }')
+        rm -f "$tmp_data"
     fi
-    curl -s -X POST http://localhost:11434/api/chat -d "$json_payload"
+    curl -s --max-time 300 -X POST http://localhost:11434/api/chat -d "$json_payload"
 }
 
 # --- SECTION B4: JSON RECOVERY (5-Step Plan) ---
-# Plan: 1) Parse 2) Strip markdown 3) Regex extract 4) Retry Ollama 5) Exit non-zero
+# Handles Qwen3 thinking models: content may be plain JSON, OR wrapped in
+# <think>...</think>JSON, OR the thinking is a separate field entirely.
 parse_and_validate_json() {
     local raw="$1"
-    
+
     if [ -z "$raw" ]; then
         echo ""
         return
     fi
 
-    # Step 1: Extract content from Ollama wrapper (content or thinking)
-    local content=$(echo "$raw" | jq -r '.message.content // .message.thinking // empty' 2>/dev/null)
-    if [ -z "$content" ] || [ "$content" == "null" ]; then
-        echo "$raw" > "$DEBUG_RESPONSE_FILE" 2>/dev/null || true
-        content=$(echo "$raw" | sed -n 's/.*"content": "\(.*\)".*/\1/p' | sed 's/\\n//g' | sed 's/\\"/"/g')
-        [ -z "$content" ] && content=$(echo "$raw" | sed -n 's/.*"thinking": "\(.*\)".*/\1/p' | sed 's/\\n/\n/g' | sed 's/\\"/"/g')
+    # Save raw for debugging on failure (overwritten on each attempt)
+    echo "$raw" > "$DEBUG_RESPONSE_FILE" 2>/dev/null || true
+
+    # Step 1: Extract message.content (primary) or message.thinking (fallback)
+    local content
+    content=$(echo "$raw" | jq -r '.message.content // empty' 2>/dev/null)
+
+    # Step 1b: If content is empty or null, fall back to thinking field
+    if [ -z "$content" ] || [ "$content" = "null" ]; then
+        content=$(echo "$raw" | jq -r '.message.thinking // empty' 2>/dev/null)
     fi
 
-    # Step 2: Strip markdown fences (```json ... ``` or ``` ... ```)
+    # Step 1c: If jq failed entirely, try sed-based extraction
+    if [ -z "$content" ]; then
+        content=$(echo "$raw" | sed -n 's/.*"content":[[:space:]]*"\(.*\)".*/\1/p' | \
+            sed 's/\\n/\n/g' | sed 's/\\"/"/g' | head -n 200)
+    fi
+
+    # Step 2: Strip <think>...</think> blocks (Qwen3 / DeepSeek-R1 thinking output)
+    # These appear when think:false isn't respected or model ignores it
+    if echo "$content" | grep -q '<think>'; then
+        content=$(echo "$content" | sed 's/<think>.*<\/think>//g' | sed 's/<think>.*//g')
+    fi
+
+    # Step 3: Strip markdown fences
     if echo "$content" | grep -q '```'; then
-        content=$(echo "$content" | sed -n '/```/,/```/p' | sed '/^```/d' | tr -d '\000-\037')
+        content=$(echo "$content" | sed -n '/```/,/```/p' | sed '/^```/d')
     fi
 
-    # Step 3: Regex extract {"decisions":[...]} — range from first { to last }
+    # Step 4: If still not valid JSON with .decisions, extract the JSON object
     if ! echo "$content" | jq -e '.decisions' >/dev/null 2>&1; then
-        content=$(echo "$content" | sed -n '/{/,/}/p' | head -n 100)
+        # Try to pull out the outermost {...} that contains "decisions"
+        local extracted
+        extracted=$(echo "$content" | python3 -c "
+import sys, re, json
+text = sys.stdin.read()
+# Find JSON object containing 'decisions'
+for m in re.finditer(r'\{', text):
+    start = m.start()
+    depth = 0
+    for i, c in enumerate(text[start:], start):
+        if c == '{': depth += 1
+        elif c == '}':
+            depth -= 1
+            if depth == 0:
+                candidate = text[start:i+1]
+                try:
+                    obj = json.loads(candidate)
+                    if 'decisions' in obj:
+                        print(candidate)
+                        sys.exit(0)
+                except: pass
+                break
+" 2>/dev/null)
+        [ -n "$extracted" ] && content="$extracted"
     fi
 
-    # Step 4: Validate
-    if ! echo "$content" | jq -e . >/dev/null 2>&1; then
+    # Step 5: Final validation - save content for debug if still broken
+    if ! echo "$content" | jq -e '.decisions' >/dev/null 2>&1; then
         echo "$content" > "$DEBUG_CONTENT_FILE" 2>/dev/null || true
-        content=$(echo "$content" | grep -oE '\{[^{}]*\}' | head -1)
     fi
+
     echo "$content"
 }
 
